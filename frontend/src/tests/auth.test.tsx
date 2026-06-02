@@ -57,7 +57,7 @@ describe("Frontend Auth Integration Tests", () => {
         ok: true,
         json: async () => ({ token: "jwt-token-123", user: mockUser }),
       });
-      global.fetch = fetchMock;
+      vi.stubGlobal("fetch", fetchMock);
 
       render(
         <AuthProvider>
@@ -93,9 +93,9 @@ describe("Frontend Auth Integration Tests", () => {
         </AuthProvider>
       );
 
-      fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+      fireEvent.submit(screen.getByRole("button", { name: /log in/i }).closest("form")!);
 
-      expect(screen.getByText(/please fill in all fields/i)).toBeInTheDocument();
+      expect(await screen.findByText(/please fill in all fields/i)).toBeInTheDocument();
     });
 
     it("should navigate to register page when sign up link is clicked", () => {
@@ -118,7 +118,7 @@ describe("Frontend Auth Integration Tests", () => {
         ok: false,
         json: async () => ({ error: "Invalid email/username or password" }),
       });
-      global.fetch = fetchMock;
+      vi.stubGlobal("fetch", fetchMock);
 
       render(
         <AuthProvider>
@@ -160,7 +160,7 @@ describe("Frontend Auth Integration Tests", () => {
       expect(screen.getByLabelText(/bio/i)).toBeInTheDocument();
     });
 
-    it("should show client-side error when required fields are missing on register", () => {
+    it("should show client-side error when required fields are missing on register", async () => {
       render(
         <AuthProvider>
           <NavigationProvider>
@@ -169,9 +169,9 @@ describe("Frontend Auth Integration Tests", () => {
         </AuthProvider>
       );
 
-      fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
+      fireEvent.submit(screen.getByRole("button", { name: /sign up/i }).closest("form")!);
 
-      expect(screen.getByText(/please fill in all required fields/i)).toBeInTheDocument();
+      expect(await screen.findByText(/please fill in all required fields/i)).toBeInTheDocument();
     });
 
     it("should show error for short username on register", () => {
@@ -285,7 +285,7 @@ describe("Frontend Auth Integration Tests", () => {
         ok: true,
         json: async () => ({ token: "new-jwt-token", user: mockUser }),
       });
-      global.fetch = fetchMock;
+      vi.stubGlobal("fetch", fetchMock);
 
       render(
         <AuthProvider>
