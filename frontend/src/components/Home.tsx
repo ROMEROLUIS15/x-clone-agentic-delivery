@@ -21,7 +21,13 @@ export const Home: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const { newTweets, flush } = useTimelineStream(token);
+  const { newTweets, flush } = useTimelineStream(token, {
+    onLikeUpdate: ({ tweetId, likesCount }) => {
+      setTweets((prev) =>
+        prev.map((t) => (t.id === tweetId ? { ...t, likesCount } : t))
+      );
+    },
+  });
 
   const handleShowNew = () => {
     const incoming = flush();

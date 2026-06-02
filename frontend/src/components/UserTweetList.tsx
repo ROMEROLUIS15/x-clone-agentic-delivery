@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { api } from "../api/client";
+import { useTimelineStream } from "../api/useTimelineStream";
 import { TweetCard, Tweet } from "./TweetCard";
 
 interface UserTweetListProps {
@@ -25,6 +26,15 @@ export const UserTweetList: React.FC<UserTweetListProps> = ({
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+
+  // Live like-count updates while viewing this user's profile.
+  useTimelineStream(token, {
+    onLikeUpdate: ({ tweetId, likesCount }) => {
+      setTweets((prev) =>
+        prev.map((t) => (t.id === tweetId ? { ...t, likesCount } : t))
+      );
+    },
+  });
 
   const fetchPage = useCallback(async (offset: number) => {
     if (!token) return null;

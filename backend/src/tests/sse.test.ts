@@ -130,6 +130,70 @@ describe("SSE — GET /api/tweets/timeline/stream", () => {
     }
   });
 
+  it("delivers like:updated to the tweet author when someone else likes it", async () => {
+    // Alice subscribes to her own stream; Bob (who follows her) is the liker.
+    const stream = await openStream(tokenAlice);
+    try {
+      await waitFor(() => stream.chunks.join("").includes("event: connected"));
+
+      const tweetRes = await request(app)
+        .post("/api/tweets")
+        .set("Authorization", `Bearer ${tokenAlice}`)
+        .send({ text: "like me" });
+      const tweetId = tweetRes.body.id as string;
+
+      // wait until alice has seen her own tweet:new (so we don't race)
+      await waitFor(() => stream.chunks.join("").includes("event: tweet:new"));
+
+      await request(app)
+        .post(`/api/tweets/${tweetId}/like`)
+        .set("Authorization", `Bearer ${tokenBob}`);
+
+      await waitFor(() => stream.chunks.join("").includes("event: like:updated"));
+
+      const payload = stream.chunks.join("");
+      expect(payload).toContain("event: like:updated");
+      expect(payload).toContain(`"tweetId":"${tweetId}"`);
+      expect(payload).toContain('"likesCount":1');
+    } finally {
+      stream.close();
+    }
+  });
+
+  it("delivers like:updated again when the tweet is unliked", async () => {
+    const stream = await openStream(tokenAlice);
+    try {
+      await waitFor(() => stream.chunks.join("").includes("event: connected"));
+
+      const tweetRes = await request(app)
+        .post("/api/tweets")
+        .set("Authorization", `Bearer ${tokenAlice}`)
+        .send({ text: "fleeting like" });
+      const tweetId = tweetRes.body.id as string;
+
+      await request(app)
+        .post(`/api/tweets/${tweetId}/like`)
+        .set("Authorization", `Bearer ${tokenBob}`);
+      await request(app)
+        .post(`/api/tweets/${tweetId}/unlike`)
+        .set("Authorization", `Bearer ${tokenBob}`);
+
+      // Wait until at least two like:updated events have been seen
+      await waitFor(() => {
+        const text = stream.chunks.join("");
+        return (text.match(/event: like:updated/g) || []).length >= 2;
+      });
+
+      const payload = stream.chunks.join("");
+      const events = payload.match(/data: (\{[^\n]+\})/g) || [];
+      // The last like:updated payload should have likesCount: 0
+      const lastLike = events.reverse().find((e) => e.includes("likesCount"));
+      expect(lastLike).toContain('"likesCount":0');
+    } finally {
+      stream.close();
+    }
+  });
+
   it("does not deliver to users who do not follow the author", async () => {
     // Register a third user (carol) who follows nobody
     const cRes = await request(app).post("/api/auth/register").send({

@@ -1,5 +1,6 @@
 import prisma from "../db";
 import { HttpError } from "../middlewares/error.middleware";
+import { publishLikeUpdate } from "./realtime.service";
 
 const publicUserSelect = {
   id: true,
@@ -76,6 +77,10 @@ export async function likeTweet(userId: string, tweetId: string) {
   });
 
   const likesCount = await prisma.like.count({ where: { tweetId } });
+  void publishLikeUpdate(tweetId, tweet.userId, likesCount).catch((err) => {
+    console.error("publishLikeUpdate failed:", err);
+  });
+
   return { likesCount, liked: true };
 }
 
@@ -85,6 +90,10 @@ export async function unlikeTweet(userId: string, tweetId: string) {
 
   await prisma.like.deleteMany({ where: { userId, tweetId } });
   const likesCount = await prisma.like.count({ where: { tweetId } });
+  void publishLikeUpdate(tweetId, tweet.userId, likesCount).catch((err) => {
+    console.error("publishLikeUpdate failed:", err);
+  });
+
   return { likesCount, liked: false };
 }
 

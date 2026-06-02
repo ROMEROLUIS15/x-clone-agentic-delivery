@@ -11,6 +11,7 @@ import prisma from "../db";
 
 export type SseEvent =
   | "tweet:new"
+  | "like:updated"
   | "connected";
 
 export interface Subscriber {
@@ -60,6 +61,31 @@ export async function publishTweetToFollowers(tweet: unknown, authorId: string):
   publish(authorId, "tweet:new", tweet);
   for (const f of followers) {
     publish(f.followerId, "tweet:new", tweet);
+  }
+}
+
+/**
+ * Broadcast a like-count change to the author + author's followers. Same
+ * audience as publishTweetToFollowers — anyone who could plausibly be
+ * viewing the tweet in their timeline or on the author's profile.
+ *
+ * Payload is intentionally minimal (just tweetId + likesCount) so the
+ * client patches the existing tweet in state without re-fetching.
+ */
+export async function publishLikeUpdate(
+  tweetId: string,
+  authorId: string,
+  likesCount: number
+): Promise<void> {
+  const followers = await prisma.follow.findMany({
+    where: { followingId: authorId },
+    select: { followerId: true },
+  });
+
+  const payload = { tweetId, likesCount };
+  publish(authorId, "like:updated", payload);
+  for (const f of followers) {
+    publish(f.followerId, "like:updated", payload);
   }
 }
 

@@ -116,6 +116,34 @@ describe("Real-time — new tweets banner", () => {
     });
   });
 
+  it("updates a tweet's like count in place when a like:updated event arrives", async () => {
+    render(<Home />, { wrapper: Wrapper });
+    await waitFor(() => expect(screen.getByText("Older tweet")).toBeInTheDocument());
+
+    // The seed tweet starts at likesCount: 0 — read it via the like-count span.
+    const initialCount = screen.getByText("Older tweet")
+      .closest("article")!
+      .querySelector(".like-count")!;
+    expect(initialCount.textContent).toBe("0");
+
+    await act(async () => {
+      FakeEventSource.instance!.emit("like:updated", {
+        tweetId: "old-1",
+        likesCount: 7,
+      });
+    });
+
+    await waitFor(() => {
+      const updated = screen.getByText("Older tweet")
+        .closest("article")!
+        .querySelector(".like-count")!;
+      expect(updated.textContent).toBe("7");
+    });
+
+    // No banner should appear for a like-only update
+    expect(screen.queryByRole("button", { name: /new tweet/i })).not.toBeInTheDocument();
+  });
+
   it("pluralizes the banner label when multiple tweets arrive", async () => {
     render(<Home />, { wrapper: Wrapper });
     await waitFor(() => expect(screen.getByText("Older tweet")).toBeInTheDocument());

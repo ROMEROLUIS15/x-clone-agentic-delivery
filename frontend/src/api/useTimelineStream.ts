@@ -1,17 +1,43 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { Tweet } from "../components/TweetCard";
 
+export interface LikeUpdate {
+  tweetId: string;
+  likesCount: number;
+}
+
+interface UseTimelineStreamOptions {
+  /**
+   * Called whenever a like:updated event arrives. The handler receives the
+   * tweetId and the new total likesCount, and is expected to patch the
+   * corresponding tweet in local state. The hook intentionally does not
+   * own a list of tweets — each consumer (Home, UserTweetList) has its own.
+   */
+  onLikeUpdate?: (update: LikeUpdate) => void;
+}
+
 /**
- * Subscribes to the SSE timeline stream and buffers incoming "tweet:new"
- * events without inserting them into the visible feed. The Home component
- * decides when to flush — usually on user click of the "N new tweets" banner.
+ * Subscribes to the SSE timeline stream.
  *
- * Why not auto-insert? Mid-scroll content shifts are jarring. The Twitter/X
- * UX is to surface the new count and let the user opt in.
+ * - tweet:new events are buffered into `newTweets`; the Home banner flushes
+ *   them on user click (we don't auto-insert to avoid mid-scroll jumps).
+ * - like:updated events are forwarded synchronously to the optional
+ *   onLikeUpdate callback. Likes feel like a live counter, so they DO patch
+ *   the visible list immediately — no banner.
  */
-export function useTimelineStream(token: string | null) {
+export function useTimelineStream(
+  token: string | null,
+  options: UseTimelineStreamOptions = {}
+) {
   const [newTweets, setNewTweets] = useState<Tweet[]>([]);
   const sourceRef = useRef<EventSource | null>(null);
+
+  // Keep the latest callback in a ref so we don't tear down + reopen the
+  // EventSource every time the consumer re-renders with a new closure.
+  const onLikeUpdateRef = useRef(options.onLikeUpdate);
+  useEffect(() => {
+    onLikeUpdateRef.current = options.onLikeUpdate;
+  }, [options.onLikeUpdate]);
 
   useEffect(() => {
     if (!token) return;
@@ -24,7 +50,6 @@ export function useTimelineStream(token: string | null) {
       try {
         const tweet = JSON.parse((e as MessageEvent).data) as Tweet;
         setNewTweets((prev) => {
-          // Defensive de-dup in case of reconnect replay
           if (prev.some((t) => t.id === tweet.id)) return prev;
           return [tweet, ...prev];
         });
@@ -33,9 +58,17 @@ export function useTimelineStream(token: string | null) {
       }
     });
 
+    source.addEventListener("like:updated", (e) => {
+      try {
+        const data = JSON.parse((e as MessageEvent).data) as LikeUpdate;
+        onLikeUpdateRef.current?.(data);
+      } catch (err) {
+        console.error("Failed to parse like:updated payload:", err);
+      }
+    });
+
     source.onerror = () => {
-      // EventSource auto-reconnects with exponential backoff; we just log.
-      // Closing here would defeat that, so we leave it to the browser.
+      // EventSource auto-reconnects with backoff; nothing to do here.
     };
 
     return () => {
