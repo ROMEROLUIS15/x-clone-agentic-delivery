@@ -181,15 +181,22 @@ button, input, textarea {
   cursor: not-allowed;
 }
 
+/* New-tweets banner: centered above the feed on every breakpoint.
+   sticky + `left:50%/translateX(-50%)` don't combine reliably, so we
+   center via display:flex on a block wrapper. The button itself uses
+   margin auto + max-content width. */
 .new-tweets-banner {
   position: sticky;
   top: 8px;
   z-index: 10;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   margin: 8px auto;
   padding: 10px 18px;
+  width: max-content;
+  max-width: calc(100% - 32px);
   background: var(--primary-color);
   color: #fff;
   border: none;
@@ -197,8 +204,6 @@ button, input, textarea {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  left: 50%;
-  transform: translateX(-50%);
   box-shadow: 0 4px 18px rgba(29, 155, 240, 0.45);
   transition: background-color var(--transition-speed), transform 150ms ease;
   animation: fadeInBanner 220ms ease-out;
@@ -206,7 +211,7 @@ button, input, textarea {
 
 .new-tweets-banner:hover {
   background: var(--primary-hover);
-  transform: translateX(-50%) translateY(-1px);
+  transform: translateY(-1px);
 }
 
 .new-tweets-banner-dot {
@@ -220,8 +225,8 @@ button, input, textarea {
 }
 
 @keyframes fadeInBanner {
-  from { opacity: 0; transform: translateX(-50%) translateY(-6px); }
-  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes dotPulse {
@@ -672,21 +677,28 @@ button, input, textarea {
   background: linear-gradient(135deg, #1da1f2, #1a8cd8);
 }
 
+/* Profile header: avatar overlaps the banner, follow button on the right.
+   Using transform on the avatar (instead of negative margin) keeps the
+   flex row's natural height intact, so the follow button stays aligned
+   with the BOTTOM of the section instead of being pulled above it. */
 .profile-avatar-section {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: flex-start;
   padding: 0 16px;
-  margin-top: -40px;
+  min-height: 44px;
+  gap: 12px;
 }
 
 .profile-large-avatar {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  border: 3px solid var(--bg-primary);
+  border: 4px solid var(--bg-primary);
   object-fit: cover;
   background-color: #333;
+  transform: translateY(-50%);
+  flex-shrink: 0;
 }
 
 .follow-btn {
@@ -699,7 +711,8 @@ button, input, textarea {
   border-radius: 9999px;
   cursor: pointer;
   transition: all 0.15s ease;
-  margin-bottom: 4px;
+  margin-top: 12px;
+  flex-shrink: 0;
 }
 
 .follow-btn:hover:not(:disabled) {
@@ -1175,16 +1188,27 @@ button, input, textarea {
 }
 
 .profile-banner {
-  height: 80px;
+  height: 100px;
 }
 
 .profile-large-avatar {
   width: 64px;
   height: 64px;
+  border-width: 3px;
+}
+
+.profile-info-section {
+  padding: 8px 16px;
 }
 
 .profile-name {
-  font-size: 16px;
+  font-size: 17px;
+}
+
+.profile-stats {
+  padding: 12px 16px;
+  flex-wrap: wrap;
+  gap: 16px;
 }
 
 .auth-card {
@@ -1297,10 +1321,15 @@ button, input, textarea {
   .profile-large-avatar {
     width: 80px;
     height: 80px;
+    border-width: 4px;
   }
 
   .profile-name {
     font-size: 18px;
+  }
+
+  .profile-info-section {
+    padding: 12px 16px;
   }
 
   .auth-card {
