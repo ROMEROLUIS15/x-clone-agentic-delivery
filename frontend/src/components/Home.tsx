@@ -1,24 +1,28 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useNavigation } from "../context/NavigationContext";
 import { TweetBox } from "./TweetBox";
 
-interface TweetUser {
+export interface TweetUser {
   id: string;
   username: string;
   name: string;
   avatarUrl: string | null;
 }
 
-interface Tweet {
+export interface Tweet {
   id: string;
   text: string;
   userId: string;
   createdAt: string;
   user: TweetUser;
+  likesCount: number;
+  liked: boolean;
 }
 
 export const Home: React.FC = () => {
   const { user, token } = useAuth();
+  const { navigateTo } = useNavigation();
   const [tweets, setTweets] = useState<Tweet[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,6 +62,29 @@ export const Home: React.FC = () => {
     }
   };
 
+  const handleLike = async (tweetId: string, currentlyLiked: boolean) => {
+    if (!token) return;
+    const endpoint = currentlyLiked ? "unlike" : "like";
+    try {
+      const res = await fetch(`/api/tweets/${tweetId}/${endpoint}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTweets((prev) =>
+          prev.map((t) =>
+            t.id === tweetId
+              ? { ...t, likesCount: data.likesCount, liked: data.liked }
+              : t
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Failed to toggle like:", err);
+    }
+  };
+
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleDateString("en-US", {
@@ -86,7 +113,11 @@ export const Home: React.FC = () => {
         ) : (
           tweets.map((tweet) => (
             <article key={tweet.id} className="tweet-card">
-              <div className="tweet-card-avatar">
+              <div
+                className="tweet-card-avatar"
+                onClick={() => navigateTo("profile", { userId: tweet.user.id })}
+                style={{ cursor: "pointer" }}
+              >
                 <img
                   src={tweet.user.avatarUrl ?? "https://abs.twimg.com/sticky/default_profile_images/default_profile_400x400.png"}
                   alt={tweet.user.name}
@@ -98,20 +129,40 @@ export const Home: React.FC = () => {
               </div>
               <div className="tweet-card-body">
                 <div className="tweet-card-header">
-                  <span className="tweet-card-name">{tweet.user.name}</span>
+                  <span
+                    className="tweet-card-name"
+                    onClick={() => navigateTo("profile", { userId: tweet.user.id })}
+                    style={{ cursor: "pointer" }}
+                  >
+                    {tweet.user.name}
+                  </span>
                   <span className="tweet-card-username">@{tweet.user.username}</span>
                   <span className="tweet-card-dot">·</span>
                   <span className="tweet-card-date">{formatDate(tweet.createdAt)}</span>
                 </div>
                 <p className="tweet-card-text">{tweet.text}</p>
-                {tweet.userId === user?.id && (
+                <div className="tweet-card-actions">
                   <button
-                    className="tweet-delete-btn"
-                    onClick={() => handleDelete(tweet.id)}
+                    className={`tweet-like-btn ${tweet.liked ? "liked" : ""}`}
+                    onClick={() => handleLike(tweet.id, tweet.liked)}
                   >
-                    Delete
+                    <svg viewBox="0 0 24 24" className="like-icon" width="18" height="18">
+                      <path
+                        d={tweet.liked ? "M20.884 13.19c-1.351 2.48-4.001 5.12-8.379 7.67l-.505.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.35-2.47-1.341-4.73.034-6.686 1.38-1.96 3.45-2.75 5.264-1.982.772.327 1.53.913 2.097 1.655.277.362.421.432.985.432s.709-.07.985-.432c.567-.742 1.325-1.328 2.097-1.655 1.814-.768 3.885.022 5.264 1.982 1.375 1.956 1.384 4.216.034 6.686z" : "M20.884 13.19c-1.351 2.48-4.001 5.12-8.379 7.67l-.505.3-.504-.3c-4.379-2.55-7.029-5.19-8.382-7.67-1.35-2.47-1.341-4.73.034-6.686 1.38-1.96 3.45-2.75 5.264-1.982.772.327 1.53.913 2.097 1.655.277.362.421.432.985.432s.709-.07.985-.432c.567-.742 1.325-1.328 2.097-1.655 1.814-.768 3.885.022 5.264 1.982 1.375 1.956 1.384 4.216.034 6.686zM12 21l-1 .5-1-.5h2z"}
+                        fill="currentColor"
+                      />
+                    </svg>
+                    <span className="like-count">{tweet.likesCount}</span>
                   </button>
-                )}
+                  {tweet.userId === user?.id && (
+                    <button
+                      className="tweet-delete-btn"
+                      onClick={() => handleDelete(tweet.id)}
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
               </div>
             </article>
           ))

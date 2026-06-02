@@ -195,6 +195,8 @@ describe("Home Tweet Feed", () => {
           name: "Test User",
           avatarUrl: null,
         },
+        likesCount: 3,
+        liked: false,
       },
       {
         id: "tweet-2",
@@ -207,6 +209,8 @@ describe("Home Tweet Feed", () => {
           name: "Other",
           avatarUrl: null,
         },
+        likesCount: 0,
+        liked: false,
       },
     ];
 
@@ -233,6 +237,8 @@ describe("Home Tweet Feed", () => {
           name: "Test User",
           avatarUrl: null,
         },
+        likesCount: 0,
+        liked: false,
       },
       {
         id: "tweet-2",
@@ -245,6 +251,8 @@ describe("Home Tweet Feed", () => {
           name: "Other",
           avatarUrl: null,
         },
+        likesCount: 0,
+        liked: false,
       },
     ];
 
@@ -271,6 +279,8 @@ describe("Home Tweet Feed", () => {
           name: "Test User",
           avatarUrl: null,
         },
+        likesCount: 0,
+        liked: false,
       },
     ];
 

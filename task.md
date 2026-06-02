@@ -26,11 +26,11 @@
 - [x] _Git Commit: `feat(tweets): add tweet creation, deletion, and character validation with tests`_
 
 ## Phase 4: Social Graph & Interactions
-- [ ] Create Database models for `Follow` and `Like`.
-- [ ] Write backend endpoints: `/follow`, `/unfollow`, `/like`, `/unlike`.
-- [ ] Write backend integration tests for interactions.
-- [ ] Implement frontend elements: Follow/Unfollow button, Like button with counters, and lists of followers/following on the profile page.
-- [ ] _Git Commit: `feat(social): add follow/unfollow and like/unlike systems with real-time UI counters and tests`_
+- [x] Create Database models for `Follow` and `Like`.
+- [x] Write backend endpoints: `/follow`, `/unfollow`, `/like`, `/unlike`.
+- [x] Write backend integration tests for interactions (31 tests).
+- [x] Implement frontend elements: Follow/Unfollow button, Like button with counters, and lists of followers/following on the profile page.
+- [x] _Git Commit: `feat(social): add follow/unfollow and like/unlike systems with real-time UI counters and tests`_
 
 ## Phase 5: Timeline, Pagination & Search
 - [ ] Implement Timeline query (tweets from self + followed users) on backend.
