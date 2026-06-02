@@ -78,6 +78,24 @@ Mobile-first CSS with three breakpoints:
 
 ---
 
+## Trade-offs & Known Limitations
+
+| Decision | Trade-off |
+|---|---|
+| **JWT in `localStorage`** | Simpler than HttpOnly cookies but vulnerable to XSS. Production-grade alternative: HttpOnly + Secure + SameSite=Strict cookies plus a CSRF token. |
+| **Stateless logout** | `POST /api/auth/logout` is a no-op on the server. JWTs remain valid until expiry. A revocation list (Redis) would be needed to truly invalidate tokens. |
+| **Offset-based pagination** | Simple to implement and reason about, but degrades on large datasets (deep offsets scan many rows). Cursor-based pagination keyed on `(createdAt, id)` is the next step for scale. |
+| **Custom navigation context** | No `react-router-dom`, so URLs are not deep-linkable (e.g. `/profile/:username` can't be shared) and browser back/forward doesn't track in-app state. Chosen to keep dependencies minimal; would migrate to react-router in a real product. |
+| **No service layer** | Controllers call Prisma directly. Adequate for the current scope; a `services/` layer would be the next refactor if business rules grow (notifications, derived stats). |
+| **Hand-rolled validation** | Express controllers validate inputs by hand. `zod` would give a single source of truth and richer error reporting. |
+| **Two Prisma schemas** | `schema.prisma` (SQLite, dev) and `schema.postgres.prisma` (Postgres, Docker). Prisma does not support a single schema with a provider switch via env var. The schemas are kept in sync manually. |
+| **Like/follow return 409 on duplicates** | The endpoints are not idempotent. A future revision could flip the response to a 200 with the current state for cleaner client semantics. |
+| **Rate limit only on `/login` and `/register`** | Single-instance in-memory store. For multi-instance deploys, swap to a shared store (Redis) and consider per-IP+per-user composite keys. |
+| **CORS open by default** | `cors()` allows any origin — convenient for dev. Restrict to the frontend origin in production. |
+| **Frontend integration tests over true E2E** | Backend has Supertest integration tests; frontend uses `@testing-library/react` with mocked `fetch`. Playwright covers the cross-tier flows (auth, tweets, social, timeline). |
+
+---
+
 ## AI Tooling & Development Process
 
 This project was built using **Specification-Driven Development (SDD)** with two cooperative agentic AI systems:
@@ -98,23 +116,25 @@ Each phase follows the **GitHub Spec Kit** pattern — `Specify → Plan → Tas
 │   │   ├── schema.postgres.prisma # PostgreSQL schema (Docker)
 │   │   └── seed.ts                # Seed script (12 users, 36 tweets)
 │   ├── src/
-│   │   ├── controllers/           # Route handlers
-│   │   ├── middlewares/           # Auth middleware
-│   │   ├── routes/               # Express routers
-│   │   ├── tests/                # Backend integration tests (74)
-│   │   ├── app.ts                # Express app setup
-│   │   ├── config.ts             # JWT secret config
-│   │   ├── db.ts                 # Prisma client singleton
-│   │   └── index.ts              # Server entry point
+│   │   ├── controllers/           # Route handlers (throw HttpError, no try/catch boilerplate)
+│   │   ├── mappers/               # DTO shapers (toTweetDTO + tweetIncludeFor)
+│   │   ├── middlewares/           # Auth + central error middleware
+│   │   ├── routes/                # Express routers (auth router has rate limiter)
+│   │   ├── tests/                 # Backend integration tests
+│   │   ├── app.ts                 # Express app setup
+│   │   ├── config.ts              # JWT secret (fail-fast in production)
+│   │   ├── db.ts                  # Prisma client singleton
+│   │   └── index.ts               # Server entry point
 │   ├── Dockerfile
 │   └── package.json
 ├── frontend/
-│   ├── e2e/                      # Playwright E2E tests (4 specs)
+│   ├── e2e/                       # Playwright E2E tests (4 specs)
 │   ├── src/
-│   │   ├── components/           # React components
-│   │   ├── context/              # Auth context
-│   │   ├── tests/                # Frontend integration tests (35)
-│   │   └── index.css             # Mobile-first responsive CSS
+│   │   ├── api/                   # Central apiClient (Bearer injection, 401 auto-logout)
+│   │   ├── components/            # React components (Avatar, TweetCard reused across views)
+│   │   ├── context/               # Auth + Navigation contexts
+│   │   ├── tests/                 # Frontend integration tests
+│   │   └── index.css              # Mobile-first responsive CSS
 │   ├── nginx.conf                # Production nginx proxy config
 │   ├── Dockerfile
 │   ├── playwright.config.ts
