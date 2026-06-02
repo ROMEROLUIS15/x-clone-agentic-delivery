@@ -38,7 +38,7 @@ test.describe("Authentication E2E Flow", () => {
     // 4. Verify successful redirect to Home timeline
     // App should load and show user profile at the sidebar bottom or greetings on home page
     await expect(page.locator("h1.main-header-title")).toHaveText("Home");
-    await expect(page.locator("text=Welcome, E2E Test User!")).toBeVisible();
+    await expect(page.locator(".sidebar-profile .profile-name")).toHaveText(name);
 
     // 5. Navigate to Profile page and verify details
     await page.locator("text=Profile").click();

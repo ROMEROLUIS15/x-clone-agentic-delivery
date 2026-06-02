@@ -5,18 +5,18 @@ test.describe("Social E2E Flow", () => {
   const userAEmail = `social-a-${uniqueId}@example.com`;
   const userAUsername = `social_a_${uniqueId}`;
   const userAPassword = "password123";
-  const userAName = "Social User A";
+  const userAName = `Social User A ${uniqueId}`;
 
   const userBEmail = `social-b-${uniqueId}@example.com`;
   const userBUsername = `social_b_${uniqueId}`;
   const userBPassword = "password123";
-  const userBName = "Social User B";
+  const userBName = `Social User B ${uniqueId}`;
 
   test("should allow user A to follow user B, like their tweet, and verify counts", async ({ browser }) => {
-    const ctx = await browser.newContext();
+    const ctxA = await browser.newContext();
 
     // --- Register User A ---
-    const pageA = await ctx.newPage();
+    const pageA = await ctxA.newPage();
     await pageA.goto("/");
     await expect(pageA.locator("h1")).toHaveText("Log in to X");
     await pageA.locator("text=Sign up").click();
@@ -33,8 +33,9 @@ test.describe("Social E2E Flow", () => {
     await pageA.locator(".tweet-btn").click();
     await expect(pageA.locator("text=Hello from User A!")).toBeVisible();
 
-    // --- Register User B in a separate tab ---
-    const pageB = await ctx.newPage();
+    // --- Register User B in a separate context ---
+    const ctxB = await browser.newContext();
+    const pageB = await ctxB.newPage();
     await pageB.goto("/");
     await expect(pageB.locator("h1")).toHaveText("Log in to X");
     await pageB.locator("text=Sign up").click();
@@ -51,9 +52,13 @@ test.describe("Social E2E Flow", () => {
     await pageB.locator(".tweet-btn").click();
     await expect(pageB.locator("text=Hello from User B!")).toBeVisible();
 
-    // --- User A navigates to User B's profile ---
-    await pageA.locator(`text=@${userBUsername}`).first().click();
-    await expect(pageA.locator(".profile-name")).toHaveText(userBName);
+    // --- User A navigates to User B's profile via Search ---
+    await pageA.locator("nav").locator("text=Search").click();
+    await expect(pageA.locator("h1.main-header-title")).toHaveText("Search");
+    await pageA.locator(".search-input").fill(userBUsername);
+    await expect(pageA.locator(".search-user-card").first()).toBeVisible({ timeout: 10000 });
+    await pageA.locator(".search-user-name").filter({ hasText: userBName }).click();
+    await expect(pageA.locator("h2.profile-name")).toHaveText(userBName);
 
     // --- User A follows User B ---
     const followBtn = pageA.locator(".follow-btn");
@@ -77,10 +82,8 @@ test.describe("Social E2E Flow", () => {
     // Wait for the liked class to appear
     await expect(likeBtn).toHaveClass(/liked/);
 
-    // --- Verify User B sees the like on their own page ---
+    // --- Verify User B sees the follow/like on their own page ---
     await pageB.locator("nav").locator("text=Profile").click();
-    // Refresh to see updated counts
-    await pageB.reload();
 
     // Go to User B's followers
     const statsBtn = pageB.locator(".profile-stat-btn").filter({ hasText: "Followers" });
@@ -95,8 +98,8 @@ test.describe("Social E2E Flow", () => {
     // --- User A unfollows User B ---
     // Go to User B's profile from User A
     await pageA.goto("/");
-    await pageA.locator(`text=@${userBUsername}`).first().click();
-    await expect(pageA.locator(".profile-name")).toHaveText(userBName);
+    await pageA.locator(".tweet-card-name").filter({ hasText: userBName }).first().click();
+    await expect(pageA.locator("h2.profile-name")).toHaveText(userBName);
 
     // Hover on Following to show Unfollow text
     const followingBtn = pageA.locator(".follow-btn.following");
@@ -105,6 +108,7 @@ test.describe("Social E2E Flow", () => {
     await followingBtn.click();
     await expect(pageA.locator(".follow-btn")).toHaveText("Follow");
 
-    await ctx.close();
+    await ctxA.close();
+    await ctxB.close();
   });
 });
