@@ -10,11 +10,13 @@ import {
   searchUsers,
 } from "../controllers/social.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
+import { getUserTweets } from "../controllers/tweet.controller";
 
 const router = Router();
 
 router.get("/users/search", authMiddleware, searchUsers);
 router.get("/users/:id", authMiddleware, getUser);
+router.get("/users/:id/tweets", authMiddleware, getUserTweets);
 router.post("/users/:id/follow", authMiddleware, follow);
 router.post("/users/:id/unfollow", authMiddleware, unfollow);
 router.get("/users/:id/followers", authMiddleware, getFollowers);
