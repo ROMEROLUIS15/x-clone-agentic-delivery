@@ -3,11 +3,12 @@ import { createTweet, deleteTweet, getTimeline } from "../controllers/tweet.cont
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import { createTweetSchema } from "../schemas/tweet.schema";
+import { requireAuth } from "../types/auth";
 
 const router = Router();
 
-router.get("/timeline", authMiddleware, getTimeline);
-router.post("/", authMiddleware, validate(createTweetSchema), createTweet);
-router.delete("/:id", authMiddleware, deleteTweet);
+router.get("/timeline", authMiddleware, requireAuth(getTimeline));
+router.post("/", authMiddleware, validate(createTweetSchema), requireAuth(createTweet));
+router.delete("/:id", authMiddleware, requireAuth(deleteTweet));
 
 export default router;

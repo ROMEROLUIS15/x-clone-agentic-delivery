@@ -1,11 +1,11 @@
-import { Request, Response } from "express";
-import { HttpError } from "../middlewares/error.middleware";
+import { Response } from "express";
 import * as tweetService from "../services/tweet.service";
+import type { AuthenticatedRequest } from "../types/auth";
 
 const MAX_LIMIT = 100;
 const DEFAULT_LIMIT = 20;
 
-function parsePagination(req: Request) {
+function parsePagination(req: AuthenticatedRequest) {
   const limit = Math.min(
     Math.max(parseInt(req.query.limit as string) || DEFAULT_LIMIT, 1),
     MAX_LIMIT
@@ -14,26 +14,26 @@ function parsePagination(req: Request) {
   return { limit, offset };
 }
 
-export async function createTweet(req: Request, res: Response): Promise<void> {
-  const tweet = await tweetService.createTweet(req.user!.id, req.body.text);
+export async function createTweet(req: AuthenticatedRequest, res: Response): Promise<void> {
+  const tweet = await tweetService.createTweet(req.user.id, req.body.text);
   res.status(201).json(tweet);
 }
 
-export async function getTimeline(req: Request, res: Response): Promise<void> {
-  const result = await tweetService.getTimelineFor(req.user!.id, parsePagination(req));
+export async function getTimeline(req: AuthenticatedRequest, res: Response): Promise<void> {
+  const result = await tweetService.getTimelineFor(req.user.id, parsePagination(req));
   res.status(200).json(result);
 }
 
-export async function getUserTweets(req: Request, res: Response): Promise<void> {
+export async function getUserTweets(req: AuthenticatedRequest, res: Response): Promise<void> {
   const result = await tweetService.getTweetsByUser(
-    req.params.id,
-    req.user!.id,
+    String(req.params.id),
+    req.user.id,
     parsePagination(req)
   );
   res.status(200).json(result);
 }
 
-export async function deleteTweet(req: Request, res: Response): Promise<void> {
-  await tweetService.deleteOwnedTweet(req.params.id, req.user!.id);
+export async function deleteTweet(req: AuthenticatedRequest, res: Response): Promise<void> {
+  await tweetService.deleteOwnedTweet(String(req.params.id), req.user.id);
   res.status(200).json({ message: "Tweet deleted successfully" });
 }
