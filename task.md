@@ -33,12 +33,12 @@
 - [x] _Git Commit: `feat(social): add follow/unfollow and like/unlike systems with real-time UI counters and tests`_
 
 ## Phase 5: Timeline, Pagination & Search
-- [ ] Implement Timeline query (tweets from self + followed users) on backend.
-- [ ] Add pagination (offset-based or cursor-based) to backend timeline endpoint.
-- [ ] Implement frontend Home timeline showing paginated tweets or infinite scroll.
-- [ ] Implement user search backend endpoint (`GET /api/users/search?q=...`) and search bar in frontend.
-- [ ] Write tests covering timeline pagination and user search.
-- [ ] _Git Commit: `feat(timeline): implement paginated home timeline and search feature with tests`_
+- [x] Implement Timeline query (tweets from self + followed users) on backend.
+- [x] Add pagination (offset-based) to backend timeline endpoint.
+- [x] Implement frontend Home timeline showing paginated tweets with "Load More" button.
+- [x] Implement user search backend endpoint (`GET /api/users/search?q=...`) and search bar in frontend.
+- [x] Write tests covering timeline pagination (15 backend + 9 frontend) and user search.
+- [x] _Git Commit: `feat(timeline): implement paginated home timeline and search feature with tests`_
 
 ## Phase 6: Responsive Design & Premium CSS
 - [ ] Implement mobile-first CSS rules for all layouts.

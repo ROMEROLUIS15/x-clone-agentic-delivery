@@ -74,6 +74,13 @@ function createFetchMock(tweetsResponse: unknown) {
         }),
       });
     }
+    if (url.includes("/api/tweets/timeline")) {
+      const arr = tweetsResponse as any[];
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ tweets: arr, total: arr.length, limit: 10, offset: 0 }),
+      });
+    }
     return Promise.resolve({
       ok: true,
       json: async () => tweetsResponse,
@@ -145,6 +152,12 @@ describe("Social - Like/Unlike", () => {
           json: async () => ({ likesCount: 6, liked: true }),
         });
       }
+      if (url.includes("/api/tweets/timeline")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ tweets: mockTweets, total: mockTweets.length, limit: 10, offset: 0 }),
+        });
+      }
       return Promise.resolve({
         ok: true,
         json: async () => mockTweets,
@@ -187,6 +200,12 @@ describe("Social - Like/Unlike", () => {
         return Promise.resolve({
           ok: true,
           json: async () => ({ likesCount: 0, liked: false }),
+        });
+      }
+      if (url.includes("/api/tweets/timeline")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ tweets: mockTweets, total: mockTweets.length, limit: 10, offset: 0 }),
         });
       }
       return Promise.resolve({
