@@ -1,6 +1,6 @@
 # Twitter/X Clone — Full-Stack
 
-A full-stack Twitter/X clone built with TypeScript, featuring custom authentication, a social graph (follow/like system), paginated timeline, user search, responsive mobile-first design, and a Docker Compose production stack.
+A full-stack Twitter/X clone built with TypeScript, featuring custom authentication, a social graph (follow/like system), paginated timeline, user search, **real-time timeline updates via Server-Sent Events**, responsive mobile-first design, and a Docker Compose production stack.
 
 ---
 
@@ -18,6 +18,7 @@ A full-stack Twitter/X clone built with TypeScript, featuring custom authenticat
 | **Testing (unit/integration)** | Vitest + Supertest | Blazing-fast native ESM test runner. Supertest provides HTTP assertions without spinning up a full server. |
 | **Testing (E2E)** | Playwright | Industry-standard browser automation; covers auth, tweet creation, follow/like flows. |
 | **Containerization** | Docker Compose | Single-command production stack with PostgreSQL 16, backend, and nginx-served frontend. |
+| **Real-time** | Server-Sent Events (native) | One-directional push (server→client) for new tweets in the timeline. Simpler than WebSocket, plain HTTP, browser-native reconnection. No new dependencies. |
 
 ---
 
@@ -56,6 +57,36 @@ erDiagram
     Tweet ||--o{ Like : "receives"
 ```
 
+### Real-time Timeline (SSE)
+
+When a user posts a tweet, every connected follower (and the author) receives a `tweet:new` event over a Server-Sent Events stream. The frontend buffers incoming events and surfaces them as a sticky **"N new tweets — click to view"** banner above the feed — never auto-inserting, to avoid jarring mid-scroll content shifts.
+
+```
+                       HTTP POST /api/tweets
+   browser  ──────────────────────────────────►  Express
+                                                    │
+                                                    ▼
+                                          tweet.service.createTweet
+                                                    │ (fire-and-forget)
+                                                    ▼
+                                      publishTweetToFollowers(tweet, authorId)
+                                                    │
+                              ┌─────────────────────┼─────────────────────┐
+                              ▼                     ▼                     ▼
+                       sub: follower1        sub: follower2        sub: author
+                              │                     │                     │
+                              └─── SSE: tweet:new ──┴─────────────────────┘
+                                                    │
+                                                    ▼
+                                          banner appears in Home
+```
+
+**Why SSE over WebSocket.** The use case is one-directional server→client push. WebSocket's full-duplex channel is wasted here, costs an `Upgrade` handshake, adds reconnection plumbing, and is easier to misconfigure in corporate proxies. SSE is plain HTTP, reconnects automatically with exponential backoff (browser-native), and works transparently through standard HTTP infrastructure. The right tool for the job is the simpler one.
+
+**Auth on the stream.** `EventSource` cannot send custom headers, so the SSE endpoint accepts the JWT via `?token=` query parameter in addition to the `Authorization` header. The trade-off (tokens in URLs can leak into access logs) is documented at the top of `sseAuth.middleware.ts` along with the production-grade follow-up: a short-lived "stream ticket" endpoint that mints a 60-second token bound to that connection.
+
+**Scope.** The subscriber registry is an in-memory `Map<userId, Set<Subscriber>>` — single-instance only. The Redis-pubsub swap is a ~30-line change isolated to `realtime.service.ts`.
+
 ### Responsive Layout
 
 Mobile-first CSS with three breakpoints:
@@ -65,6 +96,17 @@ Mobile-first CSS with three breakpoints:
 | < 640px | Bottom navigation bar, single-column content |
 | 640–1024px | Compact sidebar (icons only), single-column content |
 | > 1024px | Full sidebar (icons + labels), right sidebar (search + trends) |
+
+---
+
+## Bonus Features Implemented
+
+The brief lists 5 optional bonuses and asks for "one or two". Two are implemented end-to-end:
+
+| Bonus | Where | What it adds |
+|---|---|---|
+| **Real-time updates** | `services/realtime.service.ts` + `controllers/realtime.controller.ts` + `api/useTimelineStream.ts` | SSE-based broadcast of new tweets to followers + author. Sticky in-feed banner with click-to-prepend. 13 backend + 2 frontend tests cover the path. See [Real-time Timeline (SSE)](#real-time-timeline-sse) for the architecture rationale. |
+| **Docker** | `docker-compose.yml` + `backend/Dockerfile` + `frontend/Dockerfile` | Single-command stack (`docker compose up --build`) with PostgreSQL 16, hardened secrets via env interpolation, healthchecks, and the seed auto-running on first boot. |
 
 ---
 
