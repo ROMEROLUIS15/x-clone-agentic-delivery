@@ -5,18 +5,18 @@ test.describe("Timeline & Search E2E Flow", () => {
   const userAEmail = `timeline-a-${uniqueId}@example.com`;
   const userAUsername = `tla_${uniqueId}`;
   const userAPassword = "password123";
-  const userAName = "Timeline User A";
+  const userAName = `Timeline User A ${uniqueId}`;
 
   const userBEmail = `timeline-b-${uniqueId}@example.com`;
   const userBUsername = `tlb_${uniqueId}`;
   const userBPassword = "password123";
-  const userBName = "Timeline User B";
+  const userBName = `Timeline User B ${uniqueId}`;
 
   test("should paginate timeline and search for users", async ({ browser }) => {
-    const ctx = await browser.newContext();
+    const ctxA = await browser.newContext();
 
     // --- Register User A ---
-    const pageA = await ctx.newPage();
+    const pageA = await ctxA.newPage();
     await pageA.goto("/");
     await expect(pageA.locator("h1")).toHaveText("Log in to X");
     await pageA.locator("text=Sign up").click();
@@ -33,12 +33,14 @@ test.describe("Timeline & Search E2E Flow", () => {
     await pageA.locator(".tweet-btn").click();
     await expect(pageA.locator("text=User A first tweet")).toBeVisible();
 
+    // User A creates second tweet
     await pageA.locator(".tweet-box-textarea").fill("User A second tweet");
     await pageA.locator(".tweet-btn").click();
     await expect(pageA.locator("text=User A second tweet")).toBeVisible();
 
     // --- Register User B ---
-    const pageB = await ctx.newPage();
+    const ctxB = await browser.newContext();
+    const pageB = await ctxB.newPage();
     await pageB.goto("/");
     await expect(pageB.locator("h1")).toHaveText("Log in to X");
     await pageB.locator("text=Sign up").click();
@@ -72,7 +74,7 @@ test.describe("Timeline & Search E2E Flow", () => {
 
     // Click on User B to view profile
     await pageA.locator(".search-user-name").filter({ hasText: userBName }).click();
-    await expect(pageA.locator(".profile-name")).toHaveText(userBName);
+    await expect(pageA.locator("h2.profile-name")).toHaveText(userBName);
 
     // Follow User B
     await pageA.locator(".follow-btn").click();
@@ -99,6 +101,7 @@ test.describe("Timeline & Search E2E Flow", () => {
     await pageB.locator(".search-input").fill("zzzzznonexistent");
     await expect(pageB.locator("text=No users found for")).toBeVisible({ timeout: 10000 });
 
-    await ctx.close();
+    await ctxA.close();
+    await ctxB.close();
   });
 });
