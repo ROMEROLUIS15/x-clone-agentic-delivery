@@ -15,11 +15,7 @@ function parsePagination(req: Request) {
 }
 
 export async function createTweet(req: Request, res: Response): Promise<void> {
-  const { text } = req.body;
-  if (typeof text !== "string") {
-    throw new HttpError(400, "Tweet text is required");
-  }
-  const tweet = await tweetService.createTweet(req.user!.id, text);
+  const tweet = await tweetService.createTweet(req.user!.id, req.body.text);
   res.status(201).json(tweet);
 }
 
