@@ -355,14 +355,14 @@ describe("Social Interactions Integration Tests", () => {
   describe("Tweets include like info", () => {
     it("should include likesCount and liked in tweet response", async () => {
       const res = await request(app)
-        .get("/api/tweets")
+        .get(`/api/users/${userIdB}/tweets`)
         .set("Authorization", `Bearer ${tokenB}`);
 
       expect(res.status).toBe(200);
-      expect(res.body[0]).toHaveProperty("likesCount");
-      expect(res.body[0]).toHaveProperty("liked");
-      expect(res.body[0].likesCount).toBe(0);
-      expect(res.body[0].liked).toBe(false);
+      expect(res.body.tweets[0]).toHaveProperty("likesCount");
+      expect(res.body.tweets[0]).toHaveProperty("liked");
+      expect(res.body.tweets[0].likesCount).toBe(0);
+      expect(res.body.tweets[0].liked).toBe(false);
     });
 
     it("should show liked=true after liking", async () => {
@@ -371,11 +371,11 @@ describe("Social Interactions Integration Tests", () => {
         .set("Authorization", `Bearer ${tokenA}`);
 
       const res = await request(app)
-        .get("/api/tweets")
+        .get(`/api/users/${userIdB}/tweets`)
         .set("Authorization", `Bearer ${tokenB}`);
 
       expect(res.status).toBe(200);
-      const tweet = res.body.find((t: any) => t.id === tweetIdB);
+      const tweet = res.body.tweets.find((t: any) => t.id === tweetIdB);
       expect(tweet).toBeDefined();
       expect(tweet.likesCount).toBe(1);
     });
