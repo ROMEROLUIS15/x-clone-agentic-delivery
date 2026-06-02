@@ -19,6 +19,16 @@ developers and agentic AI systems.
 - **Coverage Goal:** Backend >= 80% (Goal: 85%+), Frontend integration tests for
   critical flows.
 
+### 1.1 SDD Framework Justification: GitHub Spec Kit Pattern
+
+To maintain rigor, architectural alignment, and prevent context decay, we are adopting the **GitHub Spec Kit** workflow pattern (`Specify` -> `Plan` -> `Tasks` -> `Implement`) as our SDD framework:
+- **Decision:** Use **GitHub Spec Kit**'s structured markdown specification approach.
+- **Rationale for GitHub Spec Kit:** Ideal for greenfield projects (building from scratch). It provides a gated, trace-oriented methodology ensuring that every code block mapped is verified against our design.
+- **Alternatives Rejected:**
+  - **OpenSpec:** Rejected because it is brownfield-first (optimized for delta/diff-based iterations on existing repositories), whereas this is a new scaffold.
+  - **BMAD (Build More Architect Dreams):** Rejected because multi-agent persona simulation (Analyst, PM, Architect, QA) introduces excessive overhead and scheduling latency for a single-agent implementation.
+  - **Kiro:** Rejected as it mandates proprietary IDE integrations, whereas this challenge requires an open-source, standard repository.
+
 ---
 
 ## 2. System Architecture & Stack

@@ -48,3 +48,5 @@ test.db
 # Test coverage outputs
 coverage/
 .nyc_output/
+playwright-report/
+test-results/
