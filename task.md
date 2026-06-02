@@ -8,14 +8,14 @@
 - [x] _Git Commit: `chore: initial project scaffolding and database schema migration`_
 
 ## Phase 2: Custom Authentication System
-- [ ] Create Database models for `User`.
-- [ ] Write password hashing utility and validation logic.
-- [ ] Create backend endpoints: `/register`, `/login`, `/logout`, `/me`.
-- [ ] Write backend unit tests for User model and integration tests for auth endpoints (aiming for >80% coverage).
-- [ ] Set up frontend router and login/register pages.
-- [ ] Integrate frontend auth with backend endpoints.
-- [ ] Write at least one End-to-End (E2E) test for register/login flow.
-- [ ] _Git Commit: `feat(auth): implement custom authentication system with backend/frontend integration and E2E tests`_
+- [x] Create Database models for `User`.
+- [x] Write password hashing utility and validation logic.
+- [x] Create backend endpoints: `/register`, `/login`, `/logout`, `/me`.
+- [x] Write backend unit tests for User model and integration tests for auth endpoints (aiming for >80% coverage).
+- [x] Set up frontend router and login/register pages.
+- [x] Integrate frontend auth with backend endpoints.
+- [x] Write at least one End-to-End (E2E) test for register/login flow.
+- [x] _Git Commit: `feat(auth): implement custom authentication system with backend/frontend integration and E2E tests`_
 
 ## Phase 3: Tweets Operations
 - [ ] Create Database model for `Tweet`.
