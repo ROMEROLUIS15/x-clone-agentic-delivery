@@ -19,7 +19,10 @@ const userSelect = {
 } as const;
 
 function signToken(userId: string): string {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  return jwt.sign({ userId }, JWT_SECRET, {
+    expiresIn: JWT_EXPIRES_IN,
+    algorithm: "HS256",
+  });
 }
 
 export interface RegisterInput {
