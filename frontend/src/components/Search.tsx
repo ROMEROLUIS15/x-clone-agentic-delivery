@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigation } from "../context/NavigationContext";
+import { api } from "../api/client";
+import { Avatar } from "./Avatar";
 
 interface SearchUser {
   id: string;
@@ -9,6 +11,8 @@ interface SearchUser {
   bio: string | null;
   avatarUrl: string | null;
 }
+
+const DEBOUNCE_MS = 300;
 
 export const Search: React.FC = () => {
   const { token } = useAuth();
@@ -33,20 +37,18 @@ export const Search: React.FC = () => {
     setLoading(true);
     timerRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setResults(data);
-        }
+        const data = await api.get<SearchUser[]>(
+          `/api/users/search?q=${encodeURIComponent(q)}`,
+          token
+        );
+        setResults(data);
       } catch (err) {
         console.error("Search error:", err);
       } finally {
         setLoading(false);
         setSearched(true);
       }
-    }, 300);
+    }, DEBOUNCE_MS);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -82,14 +84,10 @@ export const Search: React.FC = () => {
               className="search-user-card"
               onClick={() => navigateTo("profile", { userId: user.id })}
             >
-              <img
-                className="search-user-avatar"
-                src={user.avatarUrl ?? "https://abs.twimg.com/sticky/default_profile_images/default_profile_400x400.png"}
+              <Avatar
+                src={user.avatarUrl}
                 alt={user.name}
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src =
-                    "https://abs.twimg.com/sticky/default_profile_images/default_profile_400x400.png";
-                }}
+                className="search-user-avatar"
               />
               <div className="search-user-info">
                 <span className="search-user-name">{user.name}</span>

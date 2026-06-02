@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { api, setUnauthorizedHandler } from "../api/client";
 
 export interface User {
   id: string;
@@ -38,20 +39,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
 
-          const res = await fetch("/api/auth/me", {
-            signal: controller.signal,
-            headers: {
-              Authorization: `Bearer ${storedToken}`,
-            },
-          });
-
-          if (res.ok) {
-            const data = await res.json();
-            setUser(data.user);
-            localStorage.setItem("user", JSON.stringify(data.user));
-          } else {
-            handleLogout();
-          }
+          const data = await api.get<{ user: User }>("/api/auth/me", storedToken, controller.signal);
+          setUser(data.user);
+          localStorage.setItem("user", JSON.stringify(data.user));
         } catch (error) {
           if (error instanceof DOMException && error.name === "AbortError") return;
           console.error("Auth init error:", error);
@@ -79,6 +69,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem("token");
     localStorage.removeItem("user");
   };
+
+  useEffect(() => {
+    setUnauthorizedHandler(handleLogout);
+    return () => setUnauthorizedHandler(null);
+  }, []);
 
   const handleUpdateUser = (updatedUser: User) => {
     setUser(updatedUser);

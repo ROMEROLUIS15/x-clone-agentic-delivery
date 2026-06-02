@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth, User } from "../context/AuthContext";
 import { useNavigation } from "../context/NavigationContext";
+import { api, ApiError } from "../api/client";
 
 export const Register: React.FC = () => {
   const { login } = useAuth();
@@ -42,32 +43,26 @@ export const Register: React.FC = () => {
     setSubmitting(true);
 
     try {
-      const res = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const data = await api.post<{ token: string; user: User }>(
+        "/api/auth/register",
+        {
           email,
           username,
           password,
           name,
           bio: bio || null,
           avatarUrl: avatarUrl || null,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        login(data.token, data.user);
-        navigateTo("home");
-      } else {
-        setError(data.error || "Registration failed. Please try again.");
-      }
+        }
+      );
+      login(data.token, data.user);
+      navigateTo("home");
     } catch (err) {
-      console.error("Register request error:", err);
-      setError("Network error. Please try again later.");
+      if (err instanceof ApiError) {
+        setError(err.message || "Registration failed. Please try again.");
+      } else {
+        console.error("Register request error:", err);
+        setError("Network error. Please try again later.");
+      }
     } finally {
       setSubmitting(false);
     }
