@@ -1,296 +1,178 @@
 import { Request, Response } from "express";
 import prisma from "../db";
+import { HttpError } from "../middlewares/error.middleware";
+
+async function ensureUserExists(id: string) {
+  const user = await prisma.user.findUnique({ where: { id } });
+  if (!user) throw new HttpError(404, "User not found");
+  return user;
+}
 
 export async function follow(req: Request, res: Response): Promise<void> {
-  try {
-    const currentUserId = req.user?.id;
-    const { id: targetUserId } = req.params;
+  const currentUserId = req.user!.id;
+  const { id: targetUserId } = req.params;
 
-    if (!currentUserId) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
-
-    if (currentUserId === targetUserId) {
-      res.status(400).json({ error: "You cannot follow yourself" });
-      return;
-    }
-
-    const targetUser = await prisma.user.findUnique({ where: { id: targetUserId } });
-    if (!targetUser) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
-
-    const existing = await prisma.follow.findUnique({
-      where: { followerId_followingId: { followerId: currentUserId, followingId: targetUserId } },
-    });
-
-    if (existing) {
-      res.status(409).json({ error: "Already following this user" });
-      return;
-    }
-
-    await prisma.follow.create({
-      data: { followerId: currentUserId, followingId: targetUserId },
-    });
-
-    const followCount = await prisma.follow.count({ where: { followingId: targetUserId } });
-
-    res.status(201).json({ message: "Followed successfully", followersCount: followCount });
-  } catch (error) {
-    console.error("Follow Error:", error);
-    res.status(500).json({ error: "Internal server error" });
+  if (currentUserId === targetUserId) {
+    throw new HttpError(400, "You cannot follow yourself");
   }
+  await ensureUserExists(targetUserId);
+
+  const existing = await prisma.follow.findUnique({
+    where: { followerId_followingId: { followerId: currentUserId, followingId: targetUserId } },
+  });
+  if (existing) throw new HttpError(409, "Already following this user");
+
+  await prisma.follow.create({
+    data: { followerId: currentUserId, followingId: targetUserId },
+  });
+
+  const followersCount = await prisma.follow.count({ where: { followingId: targetUserId } });
+  res.status(201).json({ message: "Followed successfully", followersCount });
 }
 
 export async function unfollow(req: Request, res: Response): Promise<void> {
-  try {
-    const currentUserId = req.user?.id;
-    const { id: targetUserId } = req.params;
+  const currentUserId = req.user!.id;
+  const { id: targetUserId } = req.params;
 
-    if (!currentUserId) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
-
-    if (currentUserId === targetUserId) {
-      res.status(400).json({ error: "You cannot unfollow yourself" });
-      return;
-    }
-
-    const targetUser = await prisma.user.findUnique({ where: { id: targetUserId } });
-    if (!targetUser) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
-
-    const existing = await prisma.follow.findUnique({
-      where: { followerId_followingId: { followerId: currentUserId, followingId: targetUserId } },
-    });
-
-    if (!existing) {
-      res.status(409).json({ error: "Not following this user" });
-      return;
-    }
-
-    await prisma.follow.delete({
-      where: { followerId_followingId: { followerId: currentUserId, followingId: targetUserId } },
-    });
-
-    const followCount = await prisma.follow.count({ where: { followingId: targetUserId } });
-
-    res.status(200).json({ message: "Unfollowed successfully", followersCount: followCount });
-  } catch (error) {
-    console.error("Unfollow Error:", error);
-    res.status(500).json({ error: "Internal server error" });
+  if (currentUserId === targetUserId) {
+    throw new HttpError(400, "You cannot unfollow yourself");
   }
+  await ensureUserExists(targetUserId);
+
+  const existing = await prisma.follow.findUnique({
+    where: { followerId_followingId: { followerId: currentUserId, followingId: targetUserId } },
+  });
+  if (!existing) throw new HttpError(409, "Not following this user");
+
+  await prisma.follow.delete({
+    where: { followerId_followingId: { followerId: currentUserId, followingId: targetUserId } },
+  });
+
+  const followersCount = await prisma.follow.count({ where: { followingId: targetUserId } });
+  res.status(200).json({ message: "Unfollowed successfully", followersCount });
 }
 
 export async function getFollowers(req: Request, res: Response): Promise<void> {
-  try {
-    const { id: targetUserId } = req.params;
+  const { id: targetUserId } = req.params;
+  await ensureUserExists(targetUserId);
 
-    const user = await prisma.user.findUnique({ where: { id: targetUserId } });
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
+  const follows = await prisma.follow.findMany({
+    where: { followingId: targetUserId },
+    include: {
+      follower: { select: { id: true, username: true, name: true, avatarUrl: true, bio: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
 
-    const follows = await prisma.follow.findMany({
-      where: { followingId: targetUserId },
-      include: {
-        follower: {
-          select: { id: true, username: true, name: true, avatarUrl: true, bio: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-
-    const followers = follows.map((f) => f.follower);
-    res.status(200).json(followers);
-  } catch (error) {
-    console.error("Get Followers Error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
+  res.status(200).json(follows.map((f) => f.follower));
 }
 
 export async function getFollowing(req: Request, res: Response): Promise<void> {
-  try {
-    const { id: targetUserId } = req.params;
+  const { id: targetUserId } = req.params;
+  await ensureUserExists(targetUserId);
 
-    const user = await prisma.user.findUnique({ where: { id: targetUserId } });
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
+  const follows = await prisma.follow.findMany({
+    where: { followerId: targetUserId },
+    include: {
+      following: { select: { id: true, username: true, name: true, avatarUrl: true, bio: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
 
-    const follows = await prisma.follow.findMany({
-      where: { followerId: targetUserId },
-      include: {
-        following: {
-          select: { id: true, username: true, name: true, avatarUrl: true, bio: true },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-
-    const following = follows.map((f) => f.following);
-    res.status(200).json(following);
-  } catch (error) {
-    console.error("Get Following Error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
+  res.status(200).json(follows.map((f) => f.following));
 }
 
 export async function like(req: Request, res: Response): Promise<void> {
-  try {
-    const currentUserId = req.user?.id;
-    const { id: tweetId } = req.params;
+  const currentUserId = req.user!.id;
+  const { id: tweetId } = req.params;
 
-    if (!currentUserId) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
+  const tweet = await prisma.tweet.findUnique({ where: { id: tweetId } });
+  if (!tweet) throw new HttpError(404, "Tweet not found");
 
-    const tweet = await prisma.tweet.findUnique({ where: { id: tweetId } });
-    if (!tweet) {
-      res.status(404).json({ error: "Tweet not found" });
-      return;
-    }
+  const existing = await prisma.like.findUnique({
+    where: { userId_tweetId: { userId: currentUserId, tweetId } },
+  });
+  if (existing) throw new HttpError(409, "Already liked this tweet");
 
-    const existing = await prisma.like.findUnique({
-      where: { userId_tweetId: { userId: currentUserId, tweetId } },
-    });
+  await prisma.like.create({ data: { userId: currentUserId, tweetId } });
+  const likesCount = await prisma.like.count({ where: { tweetId } });
 
-    if (existing) {
-      res.status(409).json({ error: "Already liked this tweet" });
-      return;
-    }
-
-    await prisma.like.create({
-      data: { userId: currentUserId, tweetId },
-    });
-
-    const likesCount = await prisma.like.count({ where: { tweetId } });
-    const liked = true;
-
-    res.status(201).json({ message: "Liked successfully", likesCount, liked });
-  } catch (error) {
-    console.error("Like Error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
+  res.status(201).json({ message: "Liked successfully", likesCount, liked: true });
 }
 
 export async function unlike(req: Request, res: Response): Promise<void> {
-  try {
-    const currentUserId = req.user?.id;
-    const { id: tweetId } = req.params;
+  const currentUserId = req.user!.id;
+  const { id: tweetId } = req.params;
 
-    if (!currentUserId) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
+  const tweet = await prisma.tweet.findUnique({ where: { id: tweetId } });
+  if (!tweet) throw new HttpError(404, "Tweet not found");
 
-    const tweet = await prisma.tweet.findUnique({ where: { id: tweetId } });
-    if (!tweet) {
-      res.status(404).json({ error: "Tweet not found" });
-      return;
-    }
+  const existing = await prisma.like.findUnique({
+    where: { userId_tweetId: { userId: currentUserId, tweetId } },
+  });
+  if (!existing) throw new HttpError(409, "Not liked yet");
 
-    const existing = await prisma.like.findUnique({
-      where: { userId_tweetId: { userId: currentUserId, tweetId } },
-    });
+  await prisma.like.delete({
+    where: { userId_tweetId: { userId: currentUserId, tweetId } },
+  });
+  const likesCount = await prisma.like.count({ where: { tweetId } });
 
-    if (!existing) {
-      res.status(409).json({ error: "Not liked yet" });
-      return;
-    }
-
-    await prisma.like.delete({
-      where: { userId_tweetId: { userId: currentUserId, tweetId } },
-    });
-
-    const likesCount = await prisma.like.count({ where: { tweetId } });
-    const liked = false;
-
-    res.status(200).json({ message: "Unliked successfully", likesCount, liked });
-  } catch (error) {
-    console.error("Unlike Error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
+  res.status(200).json({ message: "Unliked successfully", likesCount, liked: false });
 }
 
 export async function searchUsers(req: Request, res: Response): Promise<void> {
-  try {
-    const q = (req.query.q as string)?.trim();
+  const q = (req.query.q as string)?.trim();
 
-    if (!q || q.length === 0) {
-      res.status(200).json([]);
-      return;
-    }
-
-    const users = await prisma.user.findMany({
-      where: {
-        OR: [
-          { name: { contains: q } },
-          { username: { contains: q } },
-        ],
-      },
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        bio: true,
-        avatarUrl: true,
-      },
-      take: 20,
-    });
-
-    res.status(200).json(users);
-  } catch (error) {
-    console.error("Search Users Error:", error);
-    res.status(500).json({ error: "Internal server error while searching users" });
+  if (!q) {
+    res.status(200).json([]);
+    return;
   }
+
+  const users = await prisma.user.findMany({
+    where: {
+      OR: [
+        { name: { contains: q } },
+        { username: { contains: q } },
+      ],
+    },
+    select: { id: true, username: true, name: true, bio: true, avatarUrl: true },
+    take: 20,
+  });
+
+  res.status(200).json(users);
 }
 
 export async function getUser(req: Request, res: Response): Promise<void> {
-  try {
-    const { id: targetUserId } = req.params;
+  const { id: targetUserId } = req.params;
 
-    const user = await prisma.user.findUnique({
-      where: { id: targetUserId },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        name: true,
-        bio: true,
-        avatarUrl: true,
-        createdAt: true,
-      },
+  const user = await prisma.user.findUnique({
+    where: { id: targetUserId },
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      name: true,
+      bio: true,
+      avatarUrl: true,
+      createdAt: true,
+    },
+  });
+
+  if (!user) throw new HttpError(404, "User not found");
+
+  const [followersCount, followingCount] = await Promise.all([
+    prisma.follow.count({ where: { followingId: targetUserId } }),
+    prisma.follow.count({ where: { followerId: targetUserId } }),
+  ]);
+
+  let isFollowing = false;
+  const currentUserId = req.user?.id;
+  if (currentUserId && currentUserId !== targetUserId) {
+    const follow = await prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId: currentUserId, followingId: targetUserId } },
     });
-
-    if (!user) {
-      res.status(404).json({ error: "User not found" });
-      return;
-    }
-
-    const followersCount = await prisma.follow.count({ where: { followingId: targetUserId } });
-    const followingCount = await prisma.follow.count({ where: { followerId: targetUserId } });
-
-    let isFollowing = false;
-    const currentUserId = req.user?.id;
-    if (currentUserId) {
-      const follow = await prisma.follow.findUnique({
-        where: { followerId_followingId: { followerId: currentUserId, followingId: targetUserId } },
-      });
-      isFollowing = !!follow;
-    }
-
-    res.status(200).json({ user, followersCount, followingCount, isFollowing });
-  } catch (error) {
-    console.error("Get User Error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    isFollowing = !!follow;
   }
+
+  res.status(200).json({ user, followersCount, followingCount, isFollowing });
 }
