@@ -72,6 +72,26 @@ describe("Social Interactions Integration Tests", () => {
       const res = await request(app).get(`/api/users/${userIdB}`);
       expect(res.status).toBe(401);
     });
+
+    it("should NOT leak email when viewing another user's profile", async () => {
+      const res = await request(app)
+        .get(`/api/users/${userIdB}`)
+        .set("Authorization", `Bearer ${tokenA}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.user).not.toHaveProperty("email");
+      expect(res.body.user).not.toHaveProperty("passwordHash");
+    });
+
+    it("should include email when viewing own profile", async () => {
+      const res = await request(app)
+        .get(`/api/users/${userIdA}`)
+        .set("Authorization", `Bearer ${tokenA}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.user.email).toBe("usera@test.com");
+      expect(res.body.user).not.toHaveProperty("passwordHash");
+    });
   });
 
   describe("POST /api/users/:id/follow", () => {

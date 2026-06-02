@@ -103,11 +103,13 @@ export async function searchUsersByQuery(q: string) {
 }
 
 export async function getUserProfile(targetUserId: string, currentUserId: string | undefined) {
+  const isOwnProfile = currentUserId === targetUserId;
+
   const user = await prisma.user.findUnique({
     where: { id: targetUserId },
     select: {
       id: true,
-      email: true,
+      email: isOwnProfile,
       username: true,
       name: true,
       bio: true,
@@ -124,7 +126,7 @@ export async function getUserProfile(targetUserId: string, currentUserId: string
   ]);
 
   let isFollowing = false;
-  if (currentUserId && currentUserId !== targetUserId) {
+  if (currentUserId && !isOwnProfile) {
     const follow = await prisma.follow.findUnique({
       where: { followerId_followingId: { followerId: currentUserId, followingId: targetUserId } },
     });
