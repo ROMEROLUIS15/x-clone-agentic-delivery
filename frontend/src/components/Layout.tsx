@@ -1,6 +1,7 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigation, ViewType } from "../context/NavigationContext";
+import { Avatar } from "./Avatar";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -66,14 +67,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           className="sidebar-profile"
           onClick={() => navigateTo("profile", { userId: user.id })}
         >
-          <img
+          <Avatar
             className="profile-avatar"
             src={user.avatarUrl}
             alt={user.name}
-            onError={(e) => {
-              (e.target as HTMLImageElement).src =
-                "https://abs.twimg.com/sticky/default_profile_images/default_profile_400x400.png";
-            }}
           />
           <div className="profile-info">
             <span className="profile-name">{user.name}</span>
