@@ -70,28 +70,51 @@ Mobile-first CSS with three breakpoints:
 
 ## Custom Auth Flow
 
-1. **Registration** — Client sends `{ email, username, password, name }`. Backend validates format (email regex, username ≥ 3 chars / alphanumeric, password ≥ 6 chars), checks uniqueness of email and username, hashes password with `bcrypt.genSalt(10)` + `bcrypt.hash()`, stores user, returns a signed JWT.
-2. **Login** — Client sends `{ emailOrUsername, password }`. Backend looks up user by email or username (case-insensitive), compares hash with `bcrypt.compare()`, returns a signed JWT on success.
-3. **Session** — The JWT (7-day expiry, signed with `JWT_SECRET`) is stored in `localStorage` and sent as `Authorization: Bearer <token>` on every authenticated request.
-4. **Middleware** — `authMiddleware.ts` extracts the token, verifies with `jwt.verify()`, fetches the user from the database, and attaches the safe user object to `req.user`. Protected routes return 401 if the token is missing, invalid, or expired.
-5. **Logout** — Stateless: the frontend removes the token from `localStorage`. The backend clears the `Set-Cookie` header (if using cookies) and returns a confirmation.
+1. **Registration** — Client sends `{ email, username, password, name }`. A `zod` schema (`schemas/auth.schema.ts`) validates format (email, username ≥ 3 chars alphanumeric, password ≥ 6 chars) before the controller ever runs. `authService.registerUser` checks uniqueness of email + username, hashes the password with `bcrypt` (10 salt rounds), stores the user, and returns a signed JWT.
+2. **Login** — Client sends `{ emailOrUsername, password }`. A `zod` schema enforces that the identifier and password are present. The service looks up the user (case-insensitive email or username), compares the hash with `bcrypt.compare()`, and returns a JWT on success — or a generic `401 Invalid email/username or password` on failure (no enumeration of which field was wrong).
+3. **Session** — The JWT (7-day expiry, signed with `JWT_SECRET` using `HS256` pinned explicitly) is stored in `localStorage` on the client and sent as `Authorization: Bearer <token>` on every authenticated request via the central `apiClient`.
+4. **Middleware** — `authMiddleware.ts` extracts the token, verifies it with `jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] })`, fetches the user from the database (so deleted/disabled users are kicked out even if their token is still cryptographically valid), and attaches a `SafeUser` to `req.user`. Protected routes are typed as `AuthenticatedRequest` so the compiler guarantees `req.user` is present (no `req.user!` non-null assertions).
+5. **Brute-force protection** — `/register` and `/login` are wrapped in a stricter `authLimiter` (20 requests / 15 min / IP). Mutating endpoints (tweet create/delete, follow, like) are wrapped in a generous `mutationLimiter` (60 requests / min / IP).
+6. **Logout** — Stateless on the server. The client clears the token from `localStorage` (and the `apiClient` auto-triggers logout on any 401 from any endpoint).
 
 ---
 
+## Security Posture
+
+What's actively implemented on the backend (not just "could be done"):
+
+| Area | Implementation |
+|---|---|
+| **Password storage** | `bcrypt` with 10 salt rounds. The hash is stripped from every response by the service layer (verified by two tests). |
+| **JWT signing & verification** | `HS256` pinned explicitly on both sign and verify to block algorithm-confusion attacks. 7-day expiry. |
+| **JWT secret handling** | Backend refuses to boot in `NODE_ENV=production` if `JWT_SECRET` is unset. If the secret matches one of the known-weak demo defaults, a loud warning is logged at startup. |
+| **Input validation** | `zod` schemas at the route boundary. Controllers receive already-validated, type-narrowed bodies via `z.infer`. |
+| **Authorization** | `authMiddleware` + `AuthenticatedRequest` + `requireAuth` wrapper — TypeScript guarantees `req.user` exists in protected handlers. Tweet delete additionally checks ownership in the service. |
+| **Email privacy** | `GET /api/users/:id` only returns the `email` field when the requester is the profile owner (covered by two tests). |
+| **SQL injection** | All queries go through Prisma's parameterized client — string concatenation into SQL is structurally impossible. |
+| **XSS** | React escapes interpolated content by default; the codebase contains **zero** `dangerouslySetInnerHTML`. |
+| **CSRF** | JWT is sent in the `Authorization` header (not a cookie), so cross-origin form posts cannot impersonate the user. |
+| **HTTP headers** | `helmet()` at the top of the middleware chain sets `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Strict-Transport-Security`, `Referrer-Policy`, and removes `X-Powered-By`. |
+| **Payload limits** | `express.json({ limit: "10kb" })` — the largest legitimate body is a 280-char tweet. |
+| **Rate limiting** | `/login` and `/register` capped at 20 req / 15 min / IP. Every mutating endpoint (`POST` tweets, `POST` follow, `POST` like, etc.) capped at 60 req / min / IP. |
+| **Login error messages** | Generic `Invalid email/username or password` — does not reveal which field was wrong. |
+| **Centralized error middleware** | All thrown `HttpError`s become safe JSON responses. Unexpected errors return a generic 500 — no stack traces or internal field names ever cross the wire. |
+
 ## Trade-offs & Known Limitations
+
+Things deliberately not implemented, with the reasoning:
 
 | Decision | Trade-off |
 |---|---|
-| **JWT in `localStorage`** | Simpler than HttpOnly cookies but vulnerable to XSS. Production-grade alternative: HttpOnly + Secure + SameSite=Strict cookies plus a CSRF token. |
-| **Stateless logout** | `POST /api/auth/logout` is a no-op on the server. JWTs remain valid until expiry. A revocation list (Redis) would be needed to truly invalidate tokens. |
+| **JWT in `localStorage`** | Simpler than HttpOnly cookies but vulnerable to XSS. Production-grade alternative: HttpOnly + Secure + SameSite=Strict cookies plus a CSRF token. The XSS surface is small here (no `dangerouslySetInnerHTML`, no third-party rich-text), so the trade was acceptable for the scope. |
+| **Stateless logout** | `POST /api/auth/logout` is a no-op on the server. JWTs remain valid until expiry. A revocation list (Redis) would be needed to truly invalidate tokens before the 7-day window. |
 | **Offset-based pagination** | Simple to implement and reason about, but degrades on large datasets (deep offsets scan many rows). Cursor-based pagination keyed on `(createdAt, id)` is the next step for scale. |
 | **Custom navigation context** | No `react-router-dom`, so URLs are not deep-linkable (e.g. `/profile/:username` can't be shared) and browser back/forward doesn't track in-app state. Chosen to keep dependencies minimal; would migrate to react-router in a real product. |
-| **No service layer** | Controllers call Prisma directly. Adequate for the current scope; a `services/` layer would be the next refactor if business rules grow (notifications, derived stats). |
-| **Hand-rolled validation** | Express controllers validate inputs by hand. `zod` would give a single source of truth and richer error reporting. |
-| **Two Prisma schemas** | `schema.prisma` (SQLite, dev) and `schema.postgres.prisma` (Postgres, Docker). Prisma does not support a single schema with a provider switch via env var. The schemas are kept in sync manually. |
-| **Rate limit only on `/login` and `/register`** | Single-instance in-memory store. For multi-instance deploys, swap to a shared store (Redis) and consider per-IP+per-user composite keys. |
-| **CORS open by default** | `cors()` allows any origin — convenient for dev. Restrict to the frontend origin in production. |
+| **Two Prisma schemas** | `schema.prisma` (SQLite, dev) and `schema.postgres.prisma` (Postgres, Docker). Prisma does not support a single schema with a provider switch via env var; the schemas are kept in sync manually. |
+| **In-memory rate-limit store** | `express-rate-limit` uses an in-process counter — fine for a single backend instance, but in a multi-instance deploy you'd swap to Redis-backed storage and consider per-IP+per-user composite keys. |
+| **CORS open by default** | `cors()` allows any origin — convenient for dev. Should be restricted to the frontend origin via env var in any real deployment. |
 | **Frontend integration tests over true E2E** | Backend has Supertest integration tests; frontend uses `@testing-library/react` with mocked `fetch`. Playwright covers the cross-tier flows (auth, tweets, social, timeline). |
+| **Registration error reveals which field collided** | Returning `Email is already registered` vs `Username is already taken` is a small enumeration vector. Kept for UX clarity; an email-confirmation flow would be the real fix. |
 
 ---
 
@@ -187,13 +210,16 @@ Concretely: Gemini caught planning gaps that the implementer would have papered 
 │   │   ├── schema.postgres.prisma # PostgreSQL schema (Docker)
 │   │   └── seed.ts                # Seed script (12 users, 36 tweets)
 │   ├── src/
-│   │   ├── controllers/           # Route handlers (throw HttpError, no try/catch boilerplate)
+│   │   ├── controllers/           # Thin HTTP adapters (3-5 lines each)
+│   │   ├── services/              # Business logic (auth/tweet/social)
+│   │   ├── schemas/               # zod schemas (validate at route boundary)
 │   │   ├── mappers/               # DTO shapers (toTweetDTO + tweetIncludeFor)
-│   │   ├── middlewares/           # Auth + central error middleware
-│   │   ├── routes/                # Express routers (auth router has rate limiter)
+│   │   ├── middlewares/           # auth, error, validate, rateLimit
+│   │   ├── routes/                # Express routers (auth/tweet/social)
+│   │   ├── types/                 # SafeUser, AuthenticatedRequest, requireAuth
 │   │   ├── tests/                 # Backend integration tests
-│   │   ├── app.ts                 # Express app setup
-│   │   ├── config.ts              # JWT secret (fail-fast in production)
+│   │   ├── app.ts                 # helmet + cors + json + routers + error mw
+│   │   ├── config.ts              # JWT secret (fail-fast in prod, weak-secret warning)
 │   │   ├── db.ts                  # Prisma client singleton
 │   │   └── index.ts               # Server entry point
 │   ├── Dockerfile
