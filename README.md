@@ -106,6 +106,51 @@ The project was built end-to-end with agentic coding, using a **three-role multi
 | **Implementer** | DeepSeek inside **OpenCode** | Executed the validated plan: scaffolding, feature implementation, tests, and the progressive commit history you see from `c0f602f` to `e87141b`. |
 | **Architect / Refactorer** | Anthropic Claude (Opus 4.7) inside **Claude Code** | Final audit pass: identified duplicated logic and architectural smells (controller boilerplate, repeated tweet DTO shaping, fetch boilerplate across React components), executed the refactor, raised backend coverage from 85% to 96.74%, and closed the "tweets on profile" gap. Visible from commit `00bb6af` onward. |
 
+### The loop at a glance
+
+```
+                     ┌──────────────────────┐
+                     │      SDD.md          │
+                     │  (single source of   │
+                     │       truth)         │
+                     └──────────┬───────────┘
+                                │
+                ┌───────────────┴───────────────┐
+                ▼                               ▲
+   ┌────────────────────────┐                  │
+   │  Gemini  (Antigravity) │                  │
+   │  PLAN + REVIEW         │                  │
+   │  • stress-test phase   │                  │
+   │  • surface edge cases  │                  │
+   └────────────┬───────────┘                  │
+                │ validated plan               │
+                ▼                              │ updates SDD
+   ┌────────────────────────┐                  │ if needed
+   │  DeepSeek (OpenCode)   │                  │
+   │  IMPLEMENT             │                  │
+   │  • feature + tests     │                  │
+   │  • semantic commit     │                  │
+   └────────────┬───────────┘                  │
+                │ green tests                  │
+                ▼                              │
+   ┌────────────────────────┐                  │
+   │  Local verify          │──── fail ────────┘
+   │  npm test + manual     │
+   └────────────┬───────────┘
+                │ pass
+                ▼
+       (next phase) ──────► … ──────► all phases done
+                                            │
+                                            ▼
+                          ┌────────────────────────────┐
+                          │ Claude  (Claude Code)      │
+                          │ AUDIT + REFACTOR (final)   │
+                          │ • mappers, error mw        │
+                          │ • apiClient, components    │
+                          │ • atomic commits, coverage │
+                          └────────────────────────────┘
+```
+
 ### Single source of truth: `SDD.md`
 
 Instead of free-form prompts, a structured **Software Design Document** ([`SDD.md`](./SDD.md)) was authored upfront with the database model, API contract, phase-by-phase task plan, and explicit DO/DON'T rules (no squash, no third-party auth, tests-with-features, mobile-first). Every prompt to every agent referenced this document — this is what kept patterns consistent across model handoffs and what made each commit traceable to a planned phase.
