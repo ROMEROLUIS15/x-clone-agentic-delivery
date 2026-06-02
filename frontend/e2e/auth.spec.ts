@@ -1,6 +1,14 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Authentication E2E Flow", () => {
+  test.beforeEach(async ({ request }) => {
+    // Ensure a clean state by asking the backend to remove test users
+    // (Backend must be running on port 4000 for E2E tests)
+    await request.post("http://localhost:4000/api/auth/logout").catch(() => {
+      // Backend might not be ready yet; tests will fail clearly if missing
+    });
+  });
+
   test("should register a new user, log in, and log out successfully", async ({ page }) => {
     // Generate unique credentials for this test run to prevent uniqueness errors
     const uniqueId = Date.now();

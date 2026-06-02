@@ -84,6 +84,35 @@ describe("Frontend Auth Integration Tests", () => {
       });
     });
 
+    it("should show client-side error when fields are empty on submit", async () => {
+      render(
+        <AuthProvider>
+          <NavigationProvider>
+            <Login />
+          </NavigationProvider>
+        </AuthProvider>
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /log in/i }));
+
+      expect(screen.getByText(/please fill in all fields/i)).toBeInTheDocument();
+    });
+
+    it("should navigate to register page when sign up link is clicked", () => {
+      render(
+        <AuthProvider>
+          <NavigationProvider>
+            <Login />
+            <InspectContext />
+          </NavigationProvider>
+        </AuthProvider>
+      );
+
+      fireEvent.click(screen.getByText(/sign up/i));
+
+      expect(screen.getByTestId("view")).toHaveTextContent("register");
+    });
+
     it("should display error message on invalid credentials", async () => {
       const fetchMock = vi.fn().mockResolvedValue({
         ok: false,
@@ -129,6 +158,116 @@ describe("Frontend Auth Integration Tests", () => {
       expect(screen.getByLabelText(/^username \*/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/^password \*/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/bio/i)).toBeInTheDocument();
+    });
+
+    it("should show client-side error when required fields are missing on register", () => {
+      render(
+        <AuthProvider>
+          <NavigationProvider>
+            <Register />
+          </NavigationProvider>
+        </AuthProvider>
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
+
+      expect(screen.getByText(/please fill in all required fields/i)).toBeInTheDocument();
+    });
+
+    it("should show error for short username on register", () => {
+      render(
+        <AuthProvider>
+          <NavigationProvider>
+            <Register />
+          </NavigationProvider>
+        </AuthProvider>
+      );
+
+      fireEvent.change(screen.getByLabelText(/^username \*/i), {
+        target: { value: "ab" },
+      });
+      fireEvent.change(screen.getByLabelText(/^name \*/i), {
+        target: { value: "Test User" },
+      });
+      fireEvent.change(screen.getByLabelText(/^email \*/i), {
+        target: { value: "test@example.com" },
+      });
+      fireEvent.change(screen.getByLabelText(/^password \*/i), {
+        target: { value: "password123" },
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
+
+      expect(screen.getByText(/username must be at least 3 characters/i)).toBeInTheDocument();
+    });
+
+    it("should show error for short password on register", () => {
+      render(
+        <AuthProvider>
+          <NavigationProvider>
+            <Register />
+          </NavigationProvider>
+        </AuthProvider>
+      );
+
+      fireEvent.change(screen.getByLabelText(/^name \*/i), {
+        target: { value: "Test User" },
+      });
+      fireEvent.change(screen.getByLabelText(/^email \*/i), {
+        target: { value: "test@example.com" },
+      });
+      fireEvent.change(screen.getByLabelText(/^username \*/i), {
+        target: { value: "testuser" },
+      });
+      fireEvent.change(screen.getByLabelText(/^password \*/i), {
+        target: { value: "12345" },
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
+
+      expect(screen.getByText(/password must be at least 6 characters/i)).toBeInTheDocument();
+    });
+
+    it("should show error for invalid username characters on register", () => {
+      render(
+        <AuthProvider>
+          <NavigationProvider>
+            <Register />
+          </NavigationProvider>
+        </AuthProvider>
+      );
+
+      fireEvent.change(screen.getByLabelText(/^name \*/i), {
+        target: { value: "Test User" },
+      });
+      fireEvent.change(screen.getByLabelText(/^email \*/i), {
+        target: { value: "test@example.com" },
+      });
+      fireEvent.change(screen.getByLabelText(/^username \*/i), {
+        target: { value: "user name!" },
+      });
+      fireEvent.change(screen.getByLabelText(/^password \*/i), {
+        target: { value: "password123" },
+      });
+
+      fireEvent.click(screen.getByRole("button", { name: /sign up/i }));
+
+      expect(screen.getByText(/alphanumeric characters and underscores/i)).toBeInTheDocument();
+    });
+
+    it("should navigate to login page when log in link is clicked", () => {
+      render(
+        <AuthProvider>
+          <NavigationProvider>
+            <Register />
+            <InspectContext />
+          </NavigationProvider>
+        </AuthProvider>
+      );
+
+      fireEvent.click(screen.getByText(/log in/i));
+
+      expect(screen.getByTestId("view")).toHaveTextContent("login");
     });
 
     it("should submit new user details and navigate to home on successful registration", async () => {
