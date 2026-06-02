@@ -221,6 +221,39 @@ export async function unlike(req: Request, res: Response): Promise<void> {
   }
 }
 
+export async function searchUsers(req: Request, res: Response): Promise<void> {
+  try {
+    const q = (req.query.q as string)?.trim();
+
+    if (!q || q.length === 0) {
+      res.status(200).json([]);
+      return;
+    }
+
+    const users = await prisma.user.findMany({
+      where: {
+        OR: [
+          { name: { contains: q } },
+          { username: { contains: q } },
+        ],
+      },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        bio: true,
+        avatarUrl: true,
+      },
+      take: 20,
+    });
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Search Users Error:", error);
+    res.status(500).json({ error: "Internal server error while searching users" });
+  }
+}
+
 export async function getUser(req: Request, res: Response): Promise<void> {
   try {
     const { id: targetUserId } = req.params;

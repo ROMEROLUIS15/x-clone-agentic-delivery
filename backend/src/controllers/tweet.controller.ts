@@ -95,6 +95,70 @@ export async function getMyTweets(req: Request, res: Response): Promise<void> {
   }
 }
 
+export async function getTimeline(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 20, 1), 100);
+    const offset = Math.max(parseInt(req.query.offset as string) || 0, 0);
+
+    const followed = await prisma.follow.findMany({
+      where: { followerId: userId },
+      select: { followingId: true },
+    });
+
+    const followedIds = followed.map((f) => f.followingId);
+    const userIds = [...new Set([userId, ...followedIds])];
+
+    const [tweets, total] = await Promise.all([
+      prisma.tweet.findMany({
+        where: { userId: { in: userIds } },
+        orderBy: { createdAt: "desc" },
+        skip: offset,
+        take: limit,
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              name: true,
+              avatarUrl: true,
+            },
+          },
+          _count: { select: { likes: true } },
+          likes: {
+            where: { userId },
+            select: { id: true },
+          },
+        },
+      }),
+      prisma.tweet.count({
+        where: { userId: { in: userIds } },
+      }),
+    ]);
+
+    res.status(200).json({
+      tweets: tweets.map((t) => ({
+        ...t,
+        _count: undefined,
+        likes: undefined,
+        likesCount: t._count.likes,
+        liked: t.likes.length > 0,
+      })),
+      total,
+      limit,
+      offset,
+    });
+  } catch (error) {
+    console.error("Get Timeline Error:", error);
+    res.status(500).json({ error: "Internal server error while fetching timeline" });
+  }
+}
+
 export async function deleteTweet(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;

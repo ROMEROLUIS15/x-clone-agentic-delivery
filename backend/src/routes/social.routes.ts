@@ -7,11 +7,13 @@ import {
   like,
   unlike,
   getUser,
+  searchUsers,
 } from "../controllers/social.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 
 const router = Router();
 
+router.get("/users/search", authMiddleware, searchUsers);
 router.get("/users/:id", authMiddleware, getUser);
 router.post("/users/:id/follow", authMiddleware, follow);
 router.post("/users/:id/unfollow", authMiddleware, unfollow);
