@@ -1,6 +1,7 @@
 import prisma from "../db";
 import { HttpError } from "../middlewares/error.middleware";
 import { toTweetDTO, tweetIncludeFor } from "../mappers/tweet.mapper";
+import { publishTweetToFollowers } from "./realtime.service";
 
 export const TWEET_MAX_CHARS = 280;
 
@@ -23,7 +24,13 @@ export async function createTweet(userId: string, text: string) {
     include: tweetIncludeFor(userId),
   });
 
-  return toTweetDTO(tweet);
+  const dto = toTweetDTO(tweet);
+  // Fire-and-forget: SSE broadcast is best-effort, never blocks the response.
+  void publishTweetToFollowers(dto, userId).catch((err) => {
+    console.error("publishTweetToFollowers failed:", err);
+  });
+
+  return dto;
 }
 
 export async function deleteOwnedTweet(tweetId: string, userId: string): Promise<void> {
