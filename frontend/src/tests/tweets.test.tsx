@@ -29,6 +29,13 @@ function createFetchMock(tweetsResponse: unknown) {
         json: async () => authResponse,
       });
     }
+    if (url.includes("/api/tweets/timeline")) {
+      const arr = tweetsResponse as any[];
+      return Promise.resolve({
+        ok: true,
+        json: async () => ({ tweets: arr, total: arr.length, limit: 10, offset: 0 }),
+      });
+    }
     return Promise.resolve({
       ok: true,
       json: async () => tweetsResponse,
@@ -293,7 +300,13 @@ describe("Home Tweet Feed", () => {
           json: async () => authResponse,
         });
       }
-      if (url.startsWith("/api/tweets/")) {
+      if (url.includes("/api/tweets/timeline")) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ tweets: mockTweets, total: mockTweets.length, limit: 10, offset: 0 }),
+        });
+      }
+      if (url.match(/\/api\/tweets\/[\w-]+$/) && !url.includes("/timeline")) {
         return Promise.resolve({
           ok: true,
           json: async () => ({ message: "Deleted" }),
