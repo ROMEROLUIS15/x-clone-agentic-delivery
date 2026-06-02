@@ -52,8 +52,8 @@ export const Register: React.FC = () => {
           username,
           password,
           name,
-          bio: bio || undefined,
-          avatarUrl: avatarUrl || undefined,
+          bio: bio || null,
+          avatarUrl: avatarUrl || null,
         }),
       });
 
@@ -99,6 +99,7 @@ export const Register: React.FC = () => {
               onChange={(e) => setName(e.target.value)}
               placeholder="Your full name"
               disabled={submitting}
+              maxLength={50}
               required
             />
           </div>
@@ -115,6 +116,7 @@ export const Register: React.FC = () => {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="e.g. test@example.com"
               disabled={submitting}
+              maxLength={254}
               required
             />
           </div>
@@ -131,6 +133,7 @@ export const Register: React.FC = () => {
               onChange={(e) => setUsername(e.target.value)}
               placeholder="e.g. testuser"
               disabled={submitting}
+              maxLength={30}
               required
             />
           </div>
@@ -147,6 +150,7 @@ export const Register: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Min. 6 characters"
               disabled={submitting}
+              maxLength={128}
               required
             />
           </div>
@@ -162,6 +166,7 @@ export const Register: React.FC = () => {
               onChange={(e) => setBio(e.target.value)}
               placeholder="Tell us about yourself"
               disabled={submitting}
+              maxLength={160}
             />
           </div>
 
@@ -177,6 +182,7 @@ export const Register: React.FC = () => {
               onChange={(e) => setAvatarUrl(e.target.value)}
               placeholder="e.g. https://example.com/avatar.jpg"
               disabled={submitting}
+              maxLength={500}
             />
           </div>
 

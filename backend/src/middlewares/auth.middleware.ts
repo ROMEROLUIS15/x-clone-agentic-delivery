@@ -1,8 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import prisma from "../db";
-
-const JWT_SECRET = process.env.JWT_SECRET ?? "super-secret-key-x-clone";
+import { JWT_SECRET } from "../config";
 
 export interface TokenPayload {
   userId: string;
@@ -43,7 +42,7 @@ export async function authMiddleware(
 
     req.user = user;
     next();
-  } catch (error) {
+  } catch {
     res.status(401).json({ error: "Unauthorized: Invalid or expired token" });
   }
 }

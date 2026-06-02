@@ -75,6 +75,7 @@ export const Login: React.FC = () => {
               onChange={(e) => setIdentifier(e.target.value)}
               placeholder="e.g. test@example.com or testuser"
               disabled={submitting}
+              maxLength={100}
               required
             />
           </div>
@@ -91,6 +92,7 @@ export const Login: React.FC = () => {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               disabled={submitting}
+              maxLength={128}
               required
             />
           </div>

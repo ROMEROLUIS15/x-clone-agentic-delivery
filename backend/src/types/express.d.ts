@@ -1,9 +1,9 @@
-import { User } from "@prisma/client";
+import type { SafeUser } from "./auth";
 
 declare global {
   namespace Express {
     interface Request {
-      user?: Omit<User, "passwordHash">;
+      user?: SafeUser;
     }
   }
 }

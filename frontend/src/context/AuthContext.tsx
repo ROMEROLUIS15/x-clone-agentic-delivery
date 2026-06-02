@@ -27,6 +27,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const initializeAuth = async () => {
       const storedToken = localStorage.getItem("token");
       const storedUser = localStorage.getItem("user");
@@ -36,8 +38,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setToken(storedToken);
           setUser(JSON.parse(storedUser));
 
-          // Verify token with backend
           const res = await fetch("/api/auth/me", {
+            signal: controller.signal,
             headers: {
               Authorization: `Bearer ${storedToken}`,
             },
@@ -48,10 +50,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(data.user);
             localStorage.setItem("user", JSON.stringify(data.user));
           } else {
-            // Token is invalid/expired
             handleLogout();
           }
         } catch (error) {
+          if (error instanceof DOMException && error.name === "AbortError") return;
           console.error("Auth init error:", error);
           handleLogout();
         }
@@ -60,6 +62,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     initializeAuth();
+
+    return () => controller.abort();
   }, []);
 
   const handleLogin = (newToken: string, newUser: User) => {
