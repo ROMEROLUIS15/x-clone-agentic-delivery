@@ -1,13 +1,16 @@
 :root {
   --bg-primary: #000000;
   --bg-secondary: #16181c;
+  --bg-tertiary: #202327;
   --primary-color: #1d9bf0;
   --primary-hover: #1a8cd8;
+  --accent-color: #1d9bf0;
   --border-color: #2f3336;
   --text-primary: #e7e9ea;
   --text-secondary: #71767b;
   --error-color: #f4212e;
   --success-color: #00ba7c;
+  --like-color: #f91880;
   --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --transition-speed: 0.2s;
   --max-width: 1200px;
@@ -234,49 +237,32 @@ button, input, textarea {
 
 /* Sidebar Navigation */
 .sidebar {
-  width: 275px;
-  padding: 12px 24px 20px 24px;
   display: flex;
-  flex-direction: column;
   border-right: 1px solid var(--border-color);
-  height: 100vh;
-  position: sticky;
-  top: 0;
 }
 
 .sidebar-logo {
-  padding: 12px;
-  margin-bottom: 4px;
   cursor: pointer;
-  display: inline-block;
 }
 
 .sidebar-logo svg {
   fill: var(--text-primary);
-  width: 30px;
-  height: 30px;
 }
 
 .sidebar-nav {
   display: flex;
-  flex-direction: column;
   gap: 4px;
-  flex-grow: 1;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 12px 16px;
   border-radius: 9999px;
-  font-size: 19px;
   font-weight: 500;
   color: var(--text-primary);
   cursor: pointer;
   transition: background-color var(--transition-speed);
-  width: max-content;
-  max-width: 100%;
 }
 
 .nav-item:hover {
@@ -287,33 +273,28 @@ button, input, textarea {
   font-weight: 700;
 }
 
+.nav-logout {
+  color: var(--error-color);
+}
+
+.nav-logout:hover {
+  background-color: rgba(244, 33, 46, 0.1) !important;
+}
+
 .nav-icon {
-  font-size: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
-.sidebar-tweet-btn {
-  background-color: var(--primary-color);
-  color: #ffffff;
-  border: none;
-  border-radius: 9999px;
-  padding: 14px;
-  font-size: 17px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background-color var(--transition-speed);
-  text-align: center;
-  margin-top: 16px;
-}
-
-.sidebar-tweet-btn:hover {
-  background-color: var(--primary-hover);
+.nav-icon svg {
+  display: block;
 }
 
 .sidebar-profile {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
   border-radius: 9999px;
   cursor: pointer;
   transition: background-color var(--transition-speed);
@@ -450,17 +431,7 @@ button, input, textarea {
   cursor: not-allowed;
 }
 
-/* Right Sidebar (Search & Trends) */
-.right-sidebar {
-  width: 325px;
-  padding: 12px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  height: 100vh;
-  position: sticky;
-  top: 0;
-}
+
 
 /* Tweet Feed */
 .tweet-feed {
@@ -910,56 +881,439 @@ button, input, textarea {
   line-height: 1.3;
 }
 
-/* Responsive Rules */
-@media (max-width: 1024px) {
+/* Right Sidebar - "What's happening" */
+.right-sidebar-search {
+  position: relative;
+  margin-top: 8px;
+}
+
+.right-sidebar-search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.right-sidebar-search-input {
+  width: 100%;
+  background-color: var(--bg-tertiary);
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  padding: 10px 16px 10px 42px;
+  color: var(--text-primary);
+  font-size: 15px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color var(--transition-speed), background-color var(--transition-speed);
+  cursor: text;
+}
+
+.right-sidebar-search-input:focus,
+.right-sidebar-search-input:hover {
+  border-color: var(--primary-color);
+  background-color: #000;
+}
+
+.right-sidebar-card {
+  background-color: var(--bg-secondary);
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  margin-top: 12px;
+  transition: background-color var(--transition-speed);
+}
+
+.right-sidebar-card:hover {
+  background-color: #1a1c20;
+}
+
+.right-sidebar-card h2 {
+  font-size: 18px;
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+
+.right-sidebar-card p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.right-sidebar-card p:last-child {
+  margin-bottom: 0;
+}
+
+/* ============================================
+   PREMIUM AESTHETIC — Micro-animations & Glows
+   ============================================ */
+
+/* Glow focus ring on inputs */
+.form-input:focus,
+.form-textarea:focus,
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(29, 155, 240, 0.2), 0 0 12px rgba(29, 155, 240, 0.08);
+}
+
+/* Button micro-interactions */
+.auth-btn:active,
+.tweet-btn:active,
+.follow-btn:active {
+  transform: scale(0.97);
+}
+
+/* Like button bounce enhancement */
+.tweet-like-btn:active .like-icon {
+  animation: likePop 0.25s ease;
+}
+
+/* Hover lift effect for tweet cards */
+.tweet-card {
+  transition: background-color var(--transition-speed);
+}
+
+/* Smooth page transitions */
+.auth-card {
+  animation: fadeIn 0.4s ease-out;
+}
+
+/* Subtle gradient accent on active nav items */
+.nav-item.active {
+  position: relative;
+}
+
+/* What's happening card gradient accent */
+.right-sidebar-card h2::after {
+  content: '';
+  display: block;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary-color), transparent);
+  border-radius: 2px;
+  margin-top: 6px;
+}
+
+/* Scrollbar polish */
+::-webkit-scrollbar-thumb {
+  background: #3e4144;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #5a5e62;
+}
+
+/* Smooth transition on layout changes */
+.app-layout {
+  transition: flex-direction 0.2s ease;
+}
+
+/* ============================================
+   RESPONSIVE — Mobile-First
+   Base = mobile (< 640px)
+   ============================================ */
+
+/* Mobile: bottom nav, full-width content, no right sidebar */
+.app-layout {
+  flex-direction: column-reverse;
+}
+
+.sidebar {
+  flex-direction: row;
+  height: 53px;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: var(--bg-primary);
+  border-right: none;
+  border-top: 1px solid var(--border-color);
+  padding: 0;
+  z-index: 100;
+  justify-content: space-around;
+  align-items: center;
+}
+
+.sidebar-logo,
+.sidebar-profile,
+.sidebar-tweet-btn,
+.nav-text {
+  display: none;
+}
+
+.nav-item {
+  padding: 8px;
+  width: auto;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.nav-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.nav-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.sidebar-nav {
+  flex-direction: row;
+  justify-content: space-around;
+  width: 100%;
+  gap: 0;
+  flex-grow: 0;
+}
+
+.nav-logout {
+  margin-top: 0;
+}
+
+.main-content {
+  margin-bottom: 53px;
+  width: 100%;
+  max-width: 100%;
+  border-right: none;
+}
+
+.right-sidebar {
+  display: none;
+}
+
+.profile-banner {
+  height: 80px;
+}
+
+.profile-large-avatar {
+  width: 64px;
+  height: 64px;
+}
+
+.profile-name {
+  font-size: 16px;
+}
+
+.auth-card {
+  padding: 24px 20px;
+}
+
+.auth-title {
+  font-size: 24px;
+}
+
+/* ============================================
+   Tablet: 640px – 1024px
+   ============================================ */
+@media (min-width: 640px) {
+  .app-layout {
+    flex-direction: row;
+  }
+
   .sidebar {
+    flex-direction: column;
+    height: 100vh;
+    position: sticky;
+    top: 0;
     width: 80px;
     align-items: center;
     padding: 12px 8px;
+    border-right: 1px solid var(--border-color);
   }
-  
-  .nav-text, .sidebar-tweet-btn, .sidebar-profile .profile-info {
-    display: none;
+
+  .sidebar-logo {
+    display: inline-block;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
   }
-  
+
+  .sidebar-logo svg {
+    fill: var(--text-primary);
+    width: 28px;
+    height: 28px;
+  }
+
+  .sidebar-nav {
+    flex-direction: column;
+    width: 100%;
+    gap: 4px;
+    flex-grow: 1;
+  }
+
   .nav-item {
     padding: 12px;
     width: auto;
+    justify-content: center;
+    font-size: 16px;
   }
-  
+
+  .nav-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .nav-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .nav-text {
+    display: none;
+  }
+
+  .sidebar-tweet-btn {
+    display: none;
+  }
+
+  .sidebar-profile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 8px;
+    margin-top: auto;
+  }
+
+  .sidebar-profile .profile-info {
+    display: none;
+  }
+
+  .sidebar-profile .profile-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .nav-logout {
+    margin-top: 12px;
+  }
+
+  .main-content {
+    margin-bottom: 0;
+    border-right: 1px solid var(--border-color);
+  }
+
   .right-sidebar {
     display: none;
   }
+
+  .profile-banner {
+    height: 120px;
+  }
+
+  .profile-large-avatar {
+    width: 80px;
+    height: 80px;
+  }
+
+  .profile-name {
+    font-size: 18px;
+  }
+
+  .auth-card {
+    padding: 40px;
+  }
+
+  .auth-title {
+    font-size: 28px;
+  }
 }
 
-@media (max-width: 640px) {
-  .app-layout {
-    flex-direction: column-reverse;
-  }
-  
+/* ============================================
+   Desktop: > 1024px
+   ============================================ */
+@media (min-width: 1025px) {
   .sidebar {
-    flex-direction: row;
-    height: 53px;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: var(--bg-primary);
-    border-right: none;
-    border-top: 1px solid var(--border-color);
-    padding: 0;
-    z-index: 100;
-    justify-content: space-around;
+    width: 275px;
+    align-items: flex-start;
+    padding: 12px 24px 20px;
   }
-  
-  .sidebar-logo, .sidebar-profile {
-    display: none;
+
+  .sidebar-logo {
+    margin-bottom: 4px;
   }
-  
-  .main-content {
-    margin-bottom: 53px;
-    width: 100%;
+
+  .sidebar-logo svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  .sidebar-nav {
+    align-items: flex-start;
+  }
+
+  .nav-item {
+    padding: 12px 16px;
+    font-size: 19px;
+    justify-content: flex-start;
+    width: max-content;
     max-width: 100%;
-    border-right: none;
+  }
+
+  .nav-icon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .nav-icon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .nav-text {
+    display: inline;
+  }
+
+  .sidebar-tweet-btn {
+    display: block;
+    background-color: var(--primary-color);
+    color: #ffffff;
+    border: none;
+    border-radius: 9999px;
+    padding: 14px;
+    font-size: 17px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color var(--transition-speed), transform 0.15s ease;
+    text-align: center;
+    margin-top: 16px;
+    width: 100%;
+  }
+
+  .sidebar-tweet-btn:hover {
+    background-color: var(--primary-hover);
+  }
+
+  .sidebar-tweet-btn:active {
+    transform: scale(0.97);
+  }
+
+  .sidebar-profile {
+    gap: 12px;
+    padding: 12px;
+  }
+
+  .sidebar-profile .profile-info {
+    display: flex;
+  }
+
+  .sidebar-profile .profile-avatar {
+    width: 40px;
+    height: 40px;
+  }
+
+  .right-sidebar {
+    display: flex;
+    width: 325px;
+    padding: 12px 24px;
+    flex-direction: column;
+    gap: 16px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
   }
 }
