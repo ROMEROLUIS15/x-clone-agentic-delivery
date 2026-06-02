@@ -35,10 +35,16 @@ export async function createTweet(req: Request, res: Response): Promise<void> {
             avatarUrl: true,
           },
         },
+        _count: { select: { likes: true } },
       },
     });
 
-    res.status(201).json(tweet);
+    res.status(201).json({
+      ...tweet,
+      _count: undefined,
+      likesCount: tweet._count.likes,
+      liked: false,
+    });
   } catch (error) {
     console.error("Create Tweet Error:", error);
     res.status(500).json({ error: "Internal server error while creating tweet" });
@@ -66,10 +72,23 @@ export async function getMyTweets(req: Request, res: Response): Promise<void> {
             avatarUrl: true,
           },
         },
+        _count: { select: { likes: true } },
+        likes: {
+          where: { userId },
+          select: { id: true },
+        },
       },
     });
 
-    res.status(200).json(tweets);
+    res.status(200).json(
+      tweets.map((t) => ({
+        ...t,
+        _count: undefined,
+        likes: undefined,
+        likesCount: t._count.likes,
+        liked: t.likes.length > 0,
+      }))
+    );
   } catch (error) {
     console.error("Get Tweets Error:", error);
     res.status(500).json({ error: "Internal server error while fetching tweets" });

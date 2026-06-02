@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import authRouter from "./routes/auth.routes";
 import tweetRouter from "./routes/tweet.routes";
+import socialRouter from "./routes/social.routes";
 
 dotenv.config();
 
@@ -13,6 +14,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRouter);
 app.use("/api/tweets", tweetRouter);
+app.use("/api", socialRouter);
 
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
