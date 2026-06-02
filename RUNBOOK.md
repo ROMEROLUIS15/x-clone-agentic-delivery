@@ -79,7 +79,7 @@ The frontend dev server proxies `/api/*` requests to `http://localhost:4000` (co
 
 ## Seed Data
 
-The seed script creates 12 realistic users with bios, avatars, 36 tweets, 48 follow relationships, and 72 cross-likes.
+The seed script creates 12 realistic users with bios, avatars, 36 tweets, 49 follow relationships, and 72 cross-likes.
 
 ```bash
 cd backend
