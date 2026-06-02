@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
+import { useTimelineStream } from "../api/useTimelineStream";
 import { TweetBox } from "./TweetBox";
 import { TweetCard, Tweet } from "./TweetCard";
 
@@ -19,6 +20,20 @@ export const Home: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+
+  const { newTweets, flush } = useTimelineStream(token);
+
+  const handleShowNew = () => {
+    const incoming = flush();
+    if (incoming.length === 0) return;
+    setTweets((prev) => {
+      const seen = new Set(prev.map((t) => t.id));
+      const merged = incoming.filter((t) => !seen.has(t.id));
+      return [...merged, ...prev];
+    });
+    setTotal((prev) => prev + incoming.length);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const fetchTimeline = useCallback(async (offset: number) => {
     if (!token) return null;
@@ -91,6 +106,20 @@ export const Home: React.FC = () => {
       </header>
 
       <TweetBox onTweetCreated={refresh} />
+
+      {newTweets.length > 0 && (
+        <button
+          type="button"
+          className="new-tweets-banner"
+          onClick={handleShowNew}
+          aria-live="polite"
+        >
+          <span className="new-tweets-banner-dot" />
+          {newTweets.length === 1
+            ? "1 new tweet — click to view"
+            : `${newTweets.length} new tweets — click to view`}
+        </button>
+      )}
 
       <div className="tweet-feed">
         {loading ? (
