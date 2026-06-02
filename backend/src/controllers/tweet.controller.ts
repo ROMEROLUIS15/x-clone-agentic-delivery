@@ -45,6 +45,37 @@ export async function createTweet(req: Request, res: Response): Promise<void> {
   }
 }
 
+export async function getMyTweets(req: Request, res: Response): Promise<void> {
+  try {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "Unauthorized" });
+      return;
+    }
+
+    const tweets = await prisma.tweet.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        user: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+            avatarUrl: true,
+          },
+        },
+      },
+    });
+
+    res.status(200).json(tweets);
+  } catch (error) {
+    console.error("Get Tweets Error:", error);
+    res.status(500).json({ error: "Internal server error while fetching tweets" });
+  }
+}
+
 export async function deleteTweet(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;

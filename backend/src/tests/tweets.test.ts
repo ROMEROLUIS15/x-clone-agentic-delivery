@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from "vitest";
 import request from "supertest";
-import app from "../index";
+import app from "../app";
 import prisma from "../db";
 
 describe("Tweets Integration Tests", () => {
@@ -47,7 +47,6 @@ describe("Tweets Integration Tests", () => {
     await prisma.like.deleteMany({});
     await prisma.tweet.deleteMany({});
     await prisma.user.deleteMany({});
-    await prisma.$disconnect();
   });
 
   describe("POST /api/tweets", () => {
