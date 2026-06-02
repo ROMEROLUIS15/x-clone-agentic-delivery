@@ -1,17 +1,22 @@
+# Production stack. For local "dev with Postgres" use, copy .env.example
+# to .env at the repo root and override at least JWT_SECRET and
+# POSTGRES_PASSWORD. The defaults below exist only so a fresh clone
+# (e.g. an evaluator running the Runbook) can boot the stack without
+# extra setup — they are NOT production-safe.
 services:
   postgres:
     image: postgres:16-alpine
     container_name: xclone-db
     environment:
-      POSTGRES_USER: xclone
-      POSTGRES_PASSWORD: xclone
-      POSTGRES_DB: xclone
+      POSTGRES_USER: ${POSTGRES_USER:-xclone}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-xclone}
+      POSTGRES_DB: ${POSTGRES_DB:-xclone}
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U xclone"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-xclone}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -22,9 +27,14 @@ services:
       dockerfile: Dockerfile
     container_name: xclone-backend
     environment:
-      DATABASE_URL: "postgresql://xclone:xclone@postgres:5432/xclone"
+      NODE_ENV: production
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-xclone}:${POSTGRES_PASSWORD:-xclone}@postgres:5432/${POSTGRES_DB:-xclone}"
       PORT: "4000"
-      JWT_SECRET: "change-me-in-production"
+      # JWT_SECRET defaults to a known-weak value so a fresh clone can boot
+      # for evaluation. The backend logs a loud warning at startup if the
+      # value matches this default (see backend/src/config.ts). For any
+      # real deployment, create a .env at the repo root and override it.
+      JWT_SECRET: ${JWT_SECRET:-INSECURE-DEMO-SECRET-DO-NOT-USE-IN-PRODUCTION}
     ports:
       - "4000:4000"
     depends_on:
