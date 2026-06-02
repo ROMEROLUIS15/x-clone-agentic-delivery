@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useAuth, User } from "../context/AuthContext";
 import { useNavigation } from "../context/NavigationContext";
 import { api, ApiError } from "../api/client";
+import { PasswordInput } from "./PasswordInput";
 
 export const Register: React.FC = () => {
   const { login } = useAuth();
@@ -137,16 +138,15 @@ export const Register: React.FC = () => {
             <label className="form-label" htmlFor="password">
               Password *
             </label>
-            <input
-              className="form-input"
-              type="password"
+            <PasswordInput
               id="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={setPassword}
               placeholder="Min. 6 characters"
               disabled={submitting}
               maxLength={128}
               required
+              autoComplete="new-password"
             />
           </div>
 

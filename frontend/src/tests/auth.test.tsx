@@ -38,8 +38,29 @@ describe("Frontend Auth Integration Tests", () => {
       );
 
       expect(screen.getByLabelText(/email or username/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+      expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
       expect(screen.getByRole("button", { name: /log in/i })).toBeInTheDocument();
+    });
+
+    it("should toggle password visibility when the eye icon is clicked", () => {
+      render(
+        <AuthProvider>
+          <NavigationProvider>
+            <Login />
+          </NavigationProvider>
+        </AuthProvider>
+      );
+
+      const passwordInput = screen.getByLabelText(/^password$/i) as HTMLInputElement;
+      expect(passwordInput.type).toBe("password");
+
+      const toggleBtn = screen.getByRole("button", { name: /show password/i });
+      fireEvent.click(toggleBtn);
+      expect(passwordInput.type).toBe("text");
+
+      const hideBtn = screen.getByRole("button", { name: /hide password/i });
+      fireEvent.click(hideBtn);
+      expect(passwordInput.type).toBe("password");
     });
 
     it("should submit credentials and navigate to home on successful login", async () => {
@@ -71,7 +92,7 @@ describe("Frontend Auth Integration Tests", () => {
       fireEvent.change(screen.getByLabelText(/email or username/i), {
         target: { value: "testuser" },
       });
-      fireEvent.change(screen.getByLabelText(/password/i), {
+      fireEvent.change(screen.getByLabelText(/^password$/i), {
         target: { value: "password123" },
       });
 
@@ -131,7 +152,7 @@ describe("Frontend Auth Integration Tests", () => {
       fireEvent.change(screen.getByLabelText(/email or username/i), {
         target: { value: "wronguser" },
       });
-      fireEvent.change(screen.getByLabelText(/password/i), {
+      fireEvent.change(screen.getByLabelText(/^password$/i), {
         target: { value: "wrongpass" },
       });
 

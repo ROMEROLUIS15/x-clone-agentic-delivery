@@ -140,6 +140,47 @@ button, input, textarea {
   box-shadow: 0 0 0 2px rgba(29, 155, 240, 0.15);
 }
 
+.password-input-wrapper {
+  position: relative;
+  display: block;
+}
+
+.password-input-wrapper .password-input {
+  padding-right: 44px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  padding: 6px;
+  border-radius: 50%;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+.password-toggle-btn:hover:not(:disabled) {
+  background-color: rgba(29, 155, 240, 0.1);
+  color: var(--primary-color);
+}
+
+.password-toggle-btn:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.password-toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .form-textarea {
   width: 100%;
   background-color: var(--bg-primary);
