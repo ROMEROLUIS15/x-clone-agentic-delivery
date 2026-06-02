@@ -89,7 +89,6 @@ Mobile-first CSS with three breakpoints:
 | **No service layer** | Controllers call Prisma directly. Adequate for the current scope; a `services/` layer would be the next refactor if business rules grow (notifications, derived stats). |
 | **Hand-rolled validation** | Express controllers validate inputs by hand. `zod` would give a single source of truth and richer error reporting. |
 | **Two Prisma schemas** | `schema.prisma` (SQLite, dev) and `schema.postgres.prisma` (Postgres, Docker). Prisma does not support a single schema with a provider switch via env var. The schemas are kept in sync manually. |
-| **Like/follow return 409 on duplicates** | The endpoints are not idempotent. A future revision could flip the response to a 200 with the current state for cleaner client semantics. |
 | **Rate limit only on `/login` and `/register`** | Single-instance in-memory store. For multi-instance deploys, swap to a shared store (Redis) and consider per-IP+per-user composite keys. |
 | **CORS open by default** | `cors()` allows any origin — convenient for dev. Restrict to the frontend origin in production. |
 | **Frontend integration tests over true E2E** | Backend has Supertest integration tests; frontend uses `@testing-library/react` with mocked `fetch`. Playwright covers the cross-tier flows (auth, tweets, social, timeline). |

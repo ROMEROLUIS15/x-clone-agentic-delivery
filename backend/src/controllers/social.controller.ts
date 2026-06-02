@@ -4,7 +4,7 @@ import type { AuthenticatedRequest } from "../types/auth";
 
 export async function follow(req: AuthenticatedRequest, res: Response): Promise<void> {
   const result = await social.followUser(req.user.id, String(req.params.id));
-  res.status(201).json({ message: "Followed successfully", ...result });
+  res.status(200).json({ message: "Followed successfully", ...result });
 }
 
 export async function unfollow(req: AuthenticatedRequest, res: Response): Promise<void> {
@@ -24,7 +24,7 @@ export async function getFollowing(req: Request, res: Response): Promise<void> {
 
 export async function like(req: AuthenticatedRequest, res: Response): Promise<void> {
   const result = await social.likeTweet(req.user.id, String(req.params.id));
-  res.status(201).json({ message: "Liked successfully", ...result });
+  res.status(200).json({ message: "Liked successfully", ...result });
 }
 
 export async function unlike(req: AuthenticatedRequest, res: Response): Promise<void> {

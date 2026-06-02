@@ -80,9 +80,10 @@ describe("Social Interactions Integration Tests", () => {
         .post(`/api/users/${userIdB}/follow`)
         .set("Authorization", `Bearer ${tokenA}`);
 
-      expect(res.status).toBe(201);
+      expect(res.status).toBe(200);
       expect(res.body.message).toBe("Followed successfully");
       expect(res.body.followersCount).toBe(1);
+      expect(res.body.isFollowing).toBe(true);
 
       const follow = await prisma.follow.findUnique({
         where: { followerId_followingId: { followerId: userIdA, followingId: userIdB } },
@@ -99,7 +100,7 @@ describe("Social Interactions Integration Tests", () => {
       expect(res.body.error).toContain("cannot follow yourself");
     });
 
-    it("should not allow duplicate follow", async () => {
+    it("should be idempotent (duplicate follow returns 200 with current state)", async () => {
       await request(app)
         .post(`/api/users/${userIdB}/follow`)
         .set("Authorization", `Bearer ${tokenA}`);
@@ -108,8 +109,9 @@ describe("Social Interactions Integration Tests", () => {
         .post(`/api/users/${userIdB}/follow`)
         .set("Authorization", `Bearer ${tokenA}`);
 
-      expect(res.status).toBe(409);
-      expect(res.body.error).toContain("Already following");
+      expect(res.status).toBe(200);
+      expect(res.body.isFollowing).toBe(true);
+      expect(res.body.followersCount).toBe(1);
     });
 
     it("should return 404 for non-existent user", async () => {
@@ -157,13 +159,13 @@ describe("Social Interactions Integration Tests", () => {
       expect(res.body.error).toContain("cannot unfollow yourself");
     });
 
-    it("should fail if not following", async () => {
+    it("should be idempotent (unfollow when not following returns 200)", async () => {
       const res = await request(app)
         .post(`/api/users/${userIdA}/unfollow`)
         .set("Authorization", `Bearer ${tokenB}`);
 
-      expect(res.status).toBe(409);
-      expect(res.body.error).toContain("Not following");
+      expect(res.status).toBe(200);
+      expect(res.body.isFollowing).toBe(false);
     });
 
     it("should return 404 for non-existent user", async () => {
@@ -268,7 +270,7 @@ describe("Social Interactions Integration Tests", () => {
         .post(`/api/tweets/${tweetIdB}/like`)
         .set("Authorization", `Bearer ${tokenA}`);
 
-      expect(res.status).toBe(201);
+      expect(res.status).toBe(200);
       expect(res.body.message).toBe("Liked successfully");
       expect(res.body.likesCount).toBe(1);
       expect(res.body.liked).toBe(true);
@@ -279,7 +281,7 @@ describe("Social Interactions Integration Tests", () => {
       expect(like).not.toBeNull();
     });
 
-    it("should not allow duplicate like", async () => {
+    it("should be idempotent (duplicate like returns 200, count stays at 1)", async () => {
       await request(app)
         .post(`/api/tweets/${tweetIdB}/like`)
         .set("Authorization", `Bearer ${tokenA}`);
@@ -288,8 +290,9 @@ describe("Social Interactions Integration Tests", () => {
         .post(`/api/tweets/${tweetIdB}/like`)
         .set("Authorization", `Bearer ${tokenA}`);
 
-      expect(res.status).toBe(409);
-      expect(res.body.error).toContain("Already liked");
+      expect(res.status).toBe(200);
+      expect(res.body.liked).toBe(true);
+      expect(res.body.likesCount).toBe(1);
     });
 
     it("should return 404 for non-existent tweet", async () => {
@@ -329,13 +332,13 @@ describe("Social Interactions Integration Tests", () => {
       expect(like).toBeNull();
     });
 
-    it("should fail if not liked yet", async () => {
+    it("should be idempotent (unlike when not liked returns 200)", async () => {
       const res = await request(app)
         .post(`/api/tweets/${tweetIdB}/unlike`)
         .set("Authorization", `Bearer ${tokenB}`);
 
-      expect(res.status).toBe(409);
-      expect(res.body.error).toContain("Not liked yet");
+      expect(res.status).toBe(200);
+      expect(res.body.liked).toBe(false);
     });
 
     it("should return 404 for non-existent tweet", async () => {

@@ -21,17 +21,14 @@ export async function followUser(currentUserId: string, targetUserId: string) {
   }
   await ensureUserExists(targetUserId);
 
-  const existing = await prisma.follow.findUnique({
+  await prisma.follow.upsert({
     where: { followerId_followingId: { followerId: currentUserId, followingId: targetUserId } },
-  });
-  if (existing) throw new HttpError(409, "Already following this user");
-
-  await prisma.follow.create({
-    data: { followerId: currentUserId, followingId: targetUserId },
+    update: {},
+    create: { followerId: currentUserId, followingId: targetUserId },
   });
 
   const followersCount = await prisma.follow.count({ where: { followingId: targetUserId } });
-  return { followersCount };
+  return { followersCount, isFollowing: true };
 }
 
 export async function unfollowUser(currentUserId: string, targetUserId: string) {
@@ -40,17 +37,12 @@ export async function unfollowUser(currentUserId: string, targetUserId: string) 
   }
   await ensureUserExists(targetUserId);
 
-  const existing = await prisma.follow.findUnique({
-    where: { followerId_followingId: { followerId: currentUserId, followingId: targetUserId } },
-  });
-  if (!existing) throw new HttpError(409, "Not following this user");
-
-  await prisma.follow.delete({
-    where: { followerId_followingId: { followerId: currentUserId, followingId: targetUserId } },
+  await prisma.follow.deleteMany({
+    where: { followerId: currentUserId, followingId: targetUserId },
   });
 
   const followersCount = await prisma.follow.count({ where: { followingId: targetUserId } });
-  return { followersCount };
+  return { followersCount, isFollowing: false };
 }
 
 export async function listFollowers(targetUserId: string) {
@@ -77,12 +69,12 @@ export async function likeTweet(userId: string, tweetId: string) {
   const tweet = await prisma.tweet.findUnique({ where: { id: tweetId } });
   if (!tweet) throw new HttpError(404, "Tweet not found");
 
-  const existing = await prisma.like.findUnique({
+  await prisma.like.upsert({
     where: { userId_tweetId: { userId, tweetId } },
+    update: {},
+    create: { userId, tweetId },
   });
-  if (existing) throw new HttpError(409, "Already liked this tweet");
 
-  await prisma.like.create({ data: { userId, tweetId } });
   const likesCount = await prisma.like.count({ where: { tweetId } });
   return { likesCount, liked: true };
 }
@@ -91,14 +83,7 @@ export async function unlikeTweet(userId: string, tweetId: string) {
   const tweet = await prisma.tweet.findUnique({ where: { id: tweetId } });
   if (!tweet) throw new HttpError(404, "Tweet not found");
 
-  const existing = await prisma.like.findUnique({
-    where: { userId_tweetId: { userId, tweetId } },
-  });
-  if (!existing) throw new HttpError(409, "Not liked yet");
-
-  await prisma.like.delete({
-    where: { userId_tweetId: { userId, tweetId } },
-  });
+  await prisma.like.deleteMany({ where: { userId, tweetId } });
   const likesCount = await prisma.like.count({ where: { tweetId } });
   return { likesCount, liked: false };
 }
