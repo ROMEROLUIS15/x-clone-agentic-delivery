@@ -55,7 +55,7 @@
 - [x] _Git Commit: `feat(bonus): implement complete docker-compose stack and realistic database seed script`_
 
 ## Phase 8: Documentation, Verification & Runbook
-- [ ] Create `README.md` with stack justification, architecture decisions, custom auth flow, AI usage summary.
-- [ ] Create `Runbook` (Setup & Operations).
-- [ ] Execute clean install from scratch to verify the runbook works.
-- [ ] _Git Commit: `docs: update README and finalize operational Runbook`_
+- [x] Create `README.md` with stack justification, architecture decisions, custom auth flow, AI usage summary.
+- [x] Create `Runbook` (Setup & Operations).
+- [x] Execute clean install from scratch to verify the runbook works.
+- [x] _Git Commit: `docs: update README and finalize operational Runbook`_
