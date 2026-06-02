@@ -114,6 +114,34 @@ describe("Auth Integration Tests", () => {
       expect(response.body.error).toContain("Email is already registered");
     });
 
+    it("should fail if username is too short", async () => {
+      const response = await request(app)
+        .post("/api/auth/register")
+        .send({
+          email: "short@example.com",
+          username: "ab",
+          password: "password123",
+          name: "Short User"
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain("Username must be at least 3 characters");
+    });
+
+    it("should fail if username contains invalid characters", async () => {
+      const response = await request(app)
+        .post("/api/auth/register")
+        .send({
+          email: "invalidchars@example.com",
+          username: "user name!",
+          password: "password123",
+          name: "Invalid User"
+        });
+
+      expect(response.status).toBe(400);
+      expect(response.body.error).toContain("alphanumeric characters and underscores");
+    });
+
     it("should fail if username is already taken", async () => {
       // Register first user
       await request(app)
@@ -189,6 +217,19 @@ describe("Auth Integration Tests", () => {
 
       expect(response.status).toBe(401);
       expect(response.body.error).toContain("Invalid email/username or password");
+    });
+
+    it("should log in using the emailOrUsername field", async () => {
+      const response = await request(app)
+        .post("/api/auth/login")
+        .send({
+          emailOrUsername: "loginuser",
+          password: "password123"
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty("token");
+      expect(response.body.user.username).toBe("loginuser");
     });
 
     it("should fail login for non-existent user", async () => {
