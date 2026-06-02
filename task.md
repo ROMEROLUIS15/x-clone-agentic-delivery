@@ -41,11 +41,11 @@
 - [x] _Git Commit: `feat(timeline): implement paginated home timeline and search feature with tests`_
 
 ## Phase 6: Responsive Design & Premium CSS
-- [ ] Implement mobile-first CSS rules for all layouts.
-- [ ] Add dark mode support and sleek gradients (visual wow-factor).
-- [ ] Add micro-animations (e.g., hover effects on buttons, smooth transitions for liking/following).
-- [ ] Validate responsive breakpoints (< 640px, 640px-1024px, > 1024px).
-- [ ] _Git Commit: `style: achieve full mobile-first responsive layout with custom design and animations`_
+- [x] Implement mobile-first CSS rules for all layouts (base < 640px, tablet 640px-1024px, desktop > 1024px).
+- [x] Add dark mode support and sleek gradients (radial bg on auth, subtle accents on cards, glow focus rings).
+- [x] Add micro-animations (likePop bounce, button scale on click, hover transitions, smooth page fadeIn).
+- [x] Validate responsive breakpoints: bottom nav on mobile, compact sidebar on tablet, full sidebar + right panel on desktop.
+- [x] _Git Commit: `style: achieve full mobile-first responsive layout with custom design and animations`_
 
 ## Phase 7: Seed Data & Bonus Features
 - [ ] Choose **at least one** bonus feature.
