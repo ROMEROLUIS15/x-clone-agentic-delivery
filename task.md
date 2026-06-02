@@ -18,11 +18,12 @@
 - [x] _Git Commit: `feat(auth): implement custom authentication system with backend/frontend integration and E2E tests`_
 
 ## Phase 3: Tweets Operations
-- [ ] Create Database model for `Tweet`.
-- [ ] Implement backend `/api/tweets` endpoints (create, delete, validation rules for <280 chars).
-- [ ] Write unit & integration tests for tweet operations.
-- [ ] Implement frontend components to write and delete tweets.
-- [ ] _Git Commit: `feat(tweets): add tweet creation, deletion, and character validation with tests`_
+- [x] Create Database model for `Tweet`.
+- [x] Implement backend `/api/tweets` endpoints (create, delete, getMyTweets, validation rules for ≤280 chars).
+- [x] Write unit & integration tests for tweet operations (11 tests).
+- [x] Implement frontend components to write (TweetBox with 280-char counter) and delete tweets.
+- [x] Add E2E Playwright test for tweet creation and deletion.
+- [x] _Git Commit: `feat(tweets): add tweet creation, deletion, and character validation with tests`_
 
 ## Phase 4: Social Graph & Interactions
 - [ ] Create Database models for `Follow` and `Like`.

@@ -462,6 +462,98 @@ button, input, textarea {
   top: 0;
 }
 
+/* Tweet Feed */
+.tweet-feed {
+  border-top: 1px solid var(--border-color);
+}
+
+.feed-placeholder {
+  padding: 48px 16px;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.tweet-card {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color var(--transition-speed);
+}
+
+.tweet-card:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.tweet-card-avatar img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #333;
+}
+
+.tweet-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.tweet-card-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.tweet-card-name {
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tweet-card-username {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tweet-card-dot {
+  color: var(--text-secondary);
+}
+
+.tweet-card-date {
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.tweet-card-text {
+  font-size: 15px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.tweet-delete-btn {
+  margin-top: 8px;
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--error-color);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: background-color var(--transition-speed);
+}
+
+.tweet-delete-btn:hover {
+  background-color: rgba(244, 33, 46, 0.1);
+}
+
 /* Responsive Rules */
 @media (max-width: 1024px) {
   .sidebar {
