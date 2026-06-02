@@ -48,10 +48,11 @@
 - [x] _Git Commit: `style: achieve full mobile-first responsive layout with custom design and animations`_
 
 ## Phase 7: Seed Data & Bonus Features
-- [ ] Choose **at least one** bonus feature.
-- [ ] Implement chosen bonus features with corresponding tests.
-- [ ] Write database seed script generating: 10 realistic users, cross-follows, tweets, and cross-likes.
-- [ ] _Git Commit: `feat(bonus): implement [chosen-feature] and database seed script`_
+- [x] Choose **at least one** bonus feature:
+  - **Docker Compose:** Setup a `docker-compose.yml` to spin up PostgreSQL, backend, and frontend with a single command.
+- [x] Implement chosen bonus features with corresponding tests.
+- [x] Write database seed script generating: 10 realistic users, cross-follows, tweets, and cross-likes.
+- [x] _Git Commit: `feat(bonus): implement complete docker-compose stack and realistic database seed script`_
 
 ## Phase 8: Documentation, Verification & Runbook
 - [ ] Create `README.md` with stack justification, architecture decisions, custom auth flow, AI usage summary.
