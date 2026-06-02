@@ -98,12 +98,39 @@ Mobile-first CSS with three breakpoints:
 
 ## AI Tooling & Development Process
 
-This project was built using **Specification-Driven Development (SDD)** with two cooperative agentic AI systems:
+The project was built end-to-end with agentic coding, using a **three-role multi-agent workflow** rather than a single chat. Each model was picked for what it does best:
 
-1. **Orchestrator Agent (DeepSeek / Claude)** — Reads the SDD, plans the next phase, delegates implementation to the Worker Agent, reviews the output, verifies tests, and commits.
-2. **Worker Agent (specialized tool-calling)** — Executes implementation tasks: writes code, runs tests, lints, and reports results back to the Orchestrator.
+| Role | Tool / Model | What it actually did |
+|---|---|---|
+| **Planner / Reviewer** | Google Gemini inside the **Antigravity IDE** | Evaluated each upcoming phase, stress-tested the SDD, surfaced edge cases and missing requirements before any code was written. Acted as a "second pair of eyes" on the plan. |
+| **Implementer** | DeepSeek inside **OpenCode** | Executed the validated plan: scaffolding, feature implementation, tests, and the progressive commit history you see from `c0f602f` to `e87141b`. |
+| **Architect / Refactorer** | Anthropic Claude (Opus 4.7) inside **Claude Code** | Final audit pass: identified duplicated logic and architectural smells (controller boilerplate, repeated tweet DTO shaping, fetch boilerplate across React components), executed the refactor, raised backend coverage from 85% to 96.74%, and closed the "tweets on profile" gap. Visible from commit `00bb6af` onward. |
 
-Each phase follows the **GitHub Spec Kit** pattern — `Specify → Plan → Tasks → Implement` — with progressive, unsquashed commits. The SDD (`SDD.md`) served as the single source of truth for all architectural decisions, ensuring context was preserved across agent sessions.
+### Single source of truth: `SDD.md`
+
+Instead of free-form prompts, a structured **Software Design Document** ([`SDD.md`](./SDD.md)) was authored upfront with the database model, API contract, phase-by-phase task plan, and explicit DO/DON'T rules (no squash, no third-party auth, tests-with-features, mobile-first). Every prompt to every agent referenced this document — this is what kept patterns consistent across model handoffs and what made each commit traceable to a planned phase.
+
+### How the loop actually worked, per phase
+
+1. **Plan** — Ask Gemini (Antigravity) to read the next SDD phase and challenge it: missing fields, edge cases, test coverage gaps.
+2. **Validate** — Manually review Gemini's feedback against the SDD; update the SDD if the feedback was sound, otherwise reject it.
+3. **Implement** — Hand the validated plan to DeepSeek (OpenCode), which produced code + tests + a phase commit.
+4. **Verify** — Run the test suite locally; only move to the next phase when green.
+5. **Refactor (final pass)** — Claude Code audited the finished codebase, proposed an ordered punch list (mapper extraction, central error middleware, apiClient with 401 auto-logout, Avatar/TweetCard reuse, JWT fail-fast, rate limit), executed it as 11 atomic commits, and verified coverage didn't regress.
+
+### What was **not** delegated
+
+Some decisions were kept off the AI's plate on purpose:
+
+- **Stack choice and justification** (Node/Express/Prisma/React + Vite/SQLite-Postgres).
+- **Database modeling** — composite uniqueness on `(followerId, followingId)` and `(userId, tweetId)`, the timeline query strategy (`IN` over followed-ids), and the dual `schema.prisma` / `schema.postgres.prisma` approach.
+- **Security posture** — bcrypt salt rounds, JWT expiry, the decision to fail-fast on `JWT_SECRET` in production, and the choice of `localStorage` vs HttpOnly cookies (the latter is documented as a deliberate trade-off, not an oversight).
+- **What to refactor vs. what to leave as documented trade-off** — service layer, zod, react-router and HttpOnly cookies were *evaluated* and consciously deferred with reasoning in the Trade-offs table.
+- **Final review of every commit** before push, including reading the diff, not just the test result.
+
+### Why three models instead of one
+
+Concretely: Gemini caught planning gaps that the implementer would have papered over; DeepSeek shipped consistent code fast against a vetted plan; Claude was used last because its strength is large-context architectural review and atomic multi-file refactors. Using a single model for all three roles tends to produce confirmation bias (the planner approves what the implementer already wants to write). Splitting roles forces an adversarial check at every step.
 
 ---
 
