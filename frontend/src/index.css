@@ -166,9 +166,11 @@ button, input, textarea {
   transition: background-color var(--transition-speed), color var(--transition-speed);
 }
 
-.password-toggle-btn:hover:not(:disabled) {
-  background-color: rgba(29, 155, 240, 0.1);
-  color: var(--primary-color);
+@media (hover: hover) {
+  .password-toggle-btn:hover:not(:disabled) {
+    background-color: rgba(29, 155, 240, 0.1);
+    color: var(--primary-color);
+  }
 }
 
 .password-toggle-btn:focus-visible {
@@ -209,9 +211,11 @@ button, input, textarea {
   animation: fadeInBanner 220ms ease-out;
 }
 
-.new-tweets-banner:hover {
-  background: var(--primary-hover);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .new-tweets-banner:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+  }
 }
 
 .new-tweets-banner-dot {
@@ -266,8 +270,10 @@ button, input, textarea {
   margin-top: 10px;
 }
 
-.auth-btn:hover {
-  background-color: #d7dbdc;
+@media (hover: hover) {
+  .auth-btn:hover {
+    background-color: #d7dbdc;
+  }
 }
 
 .auth-btn:active {
@@ -288,8 +294,10 @@ button, input, textarea {
   margin-top: 10px;
 }
 
-.auth-btn-secondary:hover {
-  background-color: rgba(29, 155, 240, 0.05);
+@media (hover: hover) {
+  .auth-btn-secondary:hover {
+    background-color: rgba(29, 155, 240, 0.05);
+  }
 }
 
 .auth-error {
@@ -317,8 +325,10 @@ button, input, textarea {
   cursor: pointer;
 }
 
-.auth-link:hover {
-  text-decoration: underline;
+@media (hover: hover) {
+  .auth-link:hover {
+    text-decoration: underline;
+  }
 }
 
 /* Base App Layout */
@@ -359,8 +369,10 @@ button, input, textarea {
   transition: background-color var(--transition-speed);
 }
 
-.nav-item:hover {
-  background-color: rgba(231, 233, 234, 0.1);
+@media (hover: hover) {
+  .nav-item:hover {
+    background-color: rgba(231, 233, 234, 0.1);
+  }
 }
 
 .nav-item.active {
@@ -371,8 +383,10 @@ button, input, textarea {
   color: var(--error-color);
 }
 
-.nav-logout:hover {
-  background-color: rgba(244, 33, 46, 0.1) !important;
+@media (hover: hover) {
+  .nav-logout:hover {
+    background-color: rgba(244, 33, 46, 0.1) !important;
+  }
 }
 
 .nav-icon {
@@ -395,8 +409,10 @@ button, input, textarea {
   margin-top: auto;
 }
 
-.sidebar-profile:hover {
-  background-color: rgba(231, 233, 234, 0.1);
+@media (hover: hover) {
+  .sidebar-profile:hover {
+    background-color: rgba(231, 233, 234, 0.1);
+  }
 }
 
 .profile-avatar {
@@ -516,8 +532,10 @@ button, input, textarea {
   transition: background-color var(--transition-speed);
 }
 
-.tweet-btn:hover:not(:disabled) {
-  background-color: var(--primary-hover);
+@media (hover: hover) {
+  .tweet-btn:hover:not(:disabled) {
+    background-color: var(--primary-hover);
+  }
 }
 
 .tweet-btn:disabled {
@@ -547,8 +565,10 @@ button, input, textarea {
   transition: background-color var(--transition-speed);
 }
 
-.tweet-card:hover {
-  background-color: rgba(255, 255, 255, 0.03);
+@media (hover: hover) {
+  .tweet-card:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+  }
 }
 
 .tweet-card-avatar img {
@@ -615,8 +635,10 @@ button, input, textarea {
   transition: background-color var(--transition-speed);
 }
 
-.tweet-delete-btn:hover {
-  background-color: rgba(244, 33, 46, 0.1);
+@media (hover: hover) {
+  .tweet-delete-btn:hover {
+    background-color: rgba(244, 33, 46, 0.1);
+  }
 }
 
 .tweet-card-actions {
@@ -640,9 +662,11 @@ button, input, textarea {
   transition: all 0.15s ease;
 }
 
-.tweet-like-btn:hover {
-  color: #f91880;
-  background-color: rgba(249, 24, 128, 0.1);
+@media (hover: hover) {
+  .tweet-like-btn:hover {
+    color: #f91880;
+    background-color: rgba(249, 24, 128, 0.1);
+  }
 }
 
 .tweet-like-btn.liked {
@@ -663,8 +687,10 @@ button, input, textarea {
   transition: transform 0.15s ease;
 }
 
-.tweet-like-btn:hover .like-icon {
-  transform: scale(1.2);
+@media (hover: hover) {
+  .tweet-like-btn:hover .like-icon {
+    transform: scale(1.2);
+  }
 }
 
 /* Profile Page */
@@ -715,8 +741,10 @@ button, input, textarea {
   flex-shrink: 0;
 }
 
-.follow-btn:hover:not(:disabled) {
-  background-color: rgba(239, 243, 244, 0.1);
+@media (hover: hover) {
+  .follow-btn:hover:not(:disabled) {
+    background-color: rgba(239, 243, 244, 0.1);
+  }
 }
 
 .follow-btn.following {
@@ -724,10 +752,12 @@ button, input, textarea {
   color: var(--text-secondary);
 }
 
-.follow-btn.following:hover {
-  border-color: var(--error-color);
-  color: var(--error-color);
-  background-color: rgba(244, 33, 46, 0.1);
+@media (hover: hover) {
+  .follow-btn.following:hover {
+    border-color: var(--error-color);
+    color: var(--error-color);
+    background-color: rgba(244, 33, 46, 0.1);
+  }
 }
 
 .follow-btn:disabled {
@@ -773,8 +803,10 @@ button, input, textarea {
   transition: color var(--transition-speed);
 }
 
-.profile-stat-btn:hover {
-  color: var(--text-primary);
+@media (hover: hover) {
+  .profile-stat-btn:hover {
+    color: var(--text-primary);
+  }
 }
 
 .profile-stat-btn strong {
@@ -831,8 +863,10 @@ button, input, textarea {
   transition: background-color var(--transition-speed);
 }
 
-.modal-close-btn:hover {
-  background-color: rgba(239, 243, 244, 0.1);
+@media (hover: hover) {
+  .modal-close-btn:hover {
+    background-color: rgba(239, 243, 244, 0.1);
+  }
 }
 
 .modal-body {
@@ -848,8 +882,10 @@ button, input, textarea {
   transition: background-color var(--transition-speed);
 }
 
-.list-user-item:hover {
-  background-color: rgba(255, 255, 255, 0.03);
+@media (hover: hover) {
+  .list-user-item:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+  }
 }
 
 .list-user-avatar {
@@ -923,8 +959,10 @@ button, input, textarea {
   transition: background-color var(--transition-speed);
 }
 
-.load-more-btn:hover:not(:disabled) {
-  background-color: rgba(239, 243, 244, 0.1);
+@media (hover: hover) {
+  .load-more-btn:hover:not(:disabled) {
+    background-color: rgba(239, 243, 244, 0.1);
+  }
 }
 
 .load-more-btn:disabled {
@@ -970,8 +1008,10 @@ button, input, textarea {
   border-bottom: 1px solid var(--border-color);
 }
 
-.search-user-card:hover {
-  background-color: rgba(255, 255, 255, 0.03);
+@media (hover: hover) {
+  .search-user-card:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+  }
 }
 
 .search-user-avatar {
@@ -1047,8 +1087,10 @@ button, input, textarea {
   transition: background-color var(--transition-speed);
 }
 
-.right-sidebar-card:hover {
-  background-color: #1a1c20;
+@media (hover: hover) {
+  .right-sidebar-card:hover {
+    background-color: #1a1c20;
+  }
 }
 
 .right-sidebar-card h2 {
@@ -1423,8 +1465,10 @@ button, input, textarea {
     width: 100%;
   }
 
-  .sidebar-tweet-btn:hover {
-    background-color: var(--primary-hover);
+  @media (hover: hover) {
+    .sidebar-tweet-btn:hover {
+      background-color: var(--primary-hover);
+    }
   }
 
   .sidebar-tweet-btn:active {
