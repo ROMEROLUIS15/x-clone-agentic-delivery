@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import authRouter from "./routes/auth.routes";
 import tweetRouter from "./routes/tweet.routes";
 import socialRouter from "./routes/social.routes";
+import { errorMiddleware } from "./middlewares/error.middleware";
 
 dotenv.config();
 
@@ -19,5 +20,7 @@ app.use("/api", socialRouter);
 app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
 });
+
+app.use(errorMiddleware);
 
 export default app;
