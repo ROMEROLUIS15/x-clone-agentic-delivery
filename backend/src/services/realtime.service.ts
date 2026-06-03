@@ -1,16 +1,22 @@
 import prisma from "../db";
 
 /**
- * Per-process pub/sub registry for SSE subscribers.
+ * Per-process topic-based pub/sub registry for SSE subscribers.
  *
- * Each connected user can have multiple subscribers (e.g. several tabs).
- * In-memory is intentional: this is a single-instance demo. For multi-instance
- * deployments the registry would be backed by Redis pub/sub or a similar
- * out-of-process bus.
+ * A "topic" is any string key. We use three namespaces:
+ *   - `user:<id>`    → a user's home timeline stream (self + followed authors)
+ *   - `profile:<id>` → anyone currently viewing that user's profile
+ *   - `thread:<id>`  → anyone currently viewing that tweet's thread
+ *
+ * Each view opens exactly one SSE connection subscribed to one topic, so a
+ * client never receives the same event twice. In-memory is intentional: this
+ * is a single-instance demo. A multi-instance deployment would back the
+ * registry with Redis pub/sub or a similar out-of-process bus.
  */
 
 export type SseEvent =
   | "tweet:new"
+  | "reply:new"
   | "like:updated"
   | "connected";
 
@@ -20,24 +26,31 @@ export interface Subscriber {
 
 const subscribers = new Map<string, Set<Subscriber>>();
 
-export function subscribe(userId: string, sub: Subscriber): () => void {
-  let set = subscribers.get(userId);
+/** Topic key builders — keep namespaces consistent across the codebase. */
+export const topics = {
+  user: (id: string) => `user:${id}`,
+  profile: (id: string) => `profile:${id}`,
+  thread: (id: string) => `thread:${id}`,
+};
+
+export function subscribe(topic: string, sub: Subscriber): () => void {
+  let set = subscribers.get(topic);
   if (!set) {
     set = new Set();
-    subscribers.set(userId, set);
+    subscribers.set(topic, set);
   }
   set.add(sub);
 
   return () => {
-    const current = subscribers.get(userId);
+    const current = subscribers.get(topic);
     if (!current) return;
     current.delete(sub);
-    if (current.size === 0) subscribers.delete(userId);
+    if (current.size === 0) subscribers.delete(topic);
   };
 }
 
-export function publish(userId: string, event: SseEvent, data: unknown): void {
-  const set = subscribers.get(userId);
+export function publish(topic: string, event: SseEvent, data: unknown): void {
+  const set = subscribers.get(topic);
   if (!set) return;
   for (const sub of set) {
     try {
@@ -48,45 +61,73 @@ export function publish(userId: string, event: SseEvent, data: unknown): void {
   }
 }
 
-/**
- * Broadcast a freshly-created tweet to the author's followers AND to the author
- * themselves. Mirrors the timeline query (self + followed users).
- */
-export async function publishTweetToFollowers(tweet: unknown, authorId: string): Promise<void> {
+/** Emit one event to a de-duplicated set of topics. */
+function publishToTopics(targets: Set<string>, event: SseEvent, data: unknown): void {
+  for (const topic of targets) publish(topic, event, data);
+}
+
+async function followerUserTopics(authorId: string): Promise<string[]> {
   const followers = await prisma.follow.findMany({
     where: { followingId: authorId },
     select: { followerId: true },
   });
-
-  publish(authorId, "tweet:new", tweet);
-  for (const f of followers) {
-    publish(f.followerId, "tweet:new", tweet);
-  }
+  return followers.map((f) => topics.user(f.followerId));
 }
 
 /**
- * Broadcast a like-count change to the author + author's followers. Same
- * audience as publishTweetToFollowers — anyone who could plausibly be
- * viewing the tweet in their timeline or on the author's profile.
- *
- * Payload is intentionally minimal (just tweetId + likesCount) so the
- * client patches the existing tweet in state without re-fetching.
+ * Broadcast a freshly-created top-level tweet to everywhere it can appear:
+ * the author's home + their followers' homes, and the author's profile.
+ */
+export async function publishNewTweet(tweet: unknown, authorId: string): Promise<void> {
+  const targets = new Set<string>([
+    topics.user(authorId),
+    topics.profile(authorId),
+    ...(await followerUserTopics(authorId)),
+  ]);
+  publishToTopics(targets, "tweet:new", tweet);
+}
+
+/**
+ * Broadcast a new reply. It appears live in the open thread, and bumps the
+ * parent's reply count anywhere the parent is shown (home feeds, the parent
+ * author's profile, and the grandparent thread if the parent is itself a reply).
+ */
+export async function publishNewReply(
+  reply: unknown,
+  parentId: string,
+  parentAuthorId: string,
+  grandParentId: string | null
+): Promise<void> {
+  const targets = new Set<string>([
+    topics.thread(parentId),
+    topics.profile(parentAuthorId),
+    topics.user(parentAuthorId),
+    ...(await followerUserTopics(parentAuthorId)),
+  ]);
+  if (grandParentId) targets.add(topics.thread(grandParentId));
+  publishToTopics(targets, "reply:new", reply);
+}
+
+/**
+ * Broadcast a like-count change to everywhere the tweet is shown: the author's
+ * home + followers' homes, the author's profile, and the tweet's own thread
+ * (plus its parent thread, when the tweet is a reply).
  */
 export async function publishLikeUpdate(
   tweetId: string,
   authorId: string,
-  likesCount: number
+  likesCount: number,
+  parentId: string | null = null
 ): Promise<void> {
-  const followers = await prisma.follow.findMany({
-    where: { followingId: authorId },
-    select: { followerId: true },
-  });
-
   const payload = { tweetId, likesCount };
-  publish(authorId, "like:updated", payload);
-  for (const f of followers) {
-    publish(f.followerId, "like:updated", payload);
-  }
+  const targets = new Set<string>([
+    topics.user(authorId),
+    topics.profile(authorId),
+    topics.thread(tweetId),
+    ...(await followerUserTopics(authorId)),
+  ]);
+  if (parentId) targets.add(topics.thread(parentId));
+  publishToTopics(targets, "like:updated", payload);
 }
 
 /**
@@ -96,6 +137,6 @@ export function _resetSubscribersForTests(): void {
   subscribers.clear();
 }
 
-export function _subscriberCountForTests(userId: string): number {
-  return subscribers.get(userId)?.size ?? 0;
+export function _subscriberCountForTests(topic: string): number {
+  return subscribers.get(topic)?.size ?? 0;
 }

@@ -77,7 +77,7 @@ export async function likeTweet(userId: string, tweetId: string) {
   });
 
   const likesCount = await prisma.like.count({ where: { tweetId } });
-  void publishLikeUpdate(tweetId, tweet.userId, likesCount).catch((err) => {
+  void publishLikeUpdate(tweetId, tweet.userId, likesCount, tweet.parentId).catch((err) => {
     console.error("publishLikeUpdate failed:", err);
   });
 
@@ -90,7 +90,7 @@ export async function unlikeTweet(userId: string, tweetId: string) {
 
   await prisma.like.deleteMany({ where: { userId, tweetId } });
   const likesCount = await prisma.like.count({ where: { tweetId } });
-  void publishLikeUpdate(tweetId, tweet.userId, likesCount).catch((err) => {
+  void publishLikeUpdate(tweetId, tweet.userId, likesCount, tweet.parentId).catch((err) => {
     console.error("publishLikeUpdate failed:", err);
   });
 

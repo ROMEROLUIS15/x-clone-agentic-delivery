@@ -104,7 +104,7 @@ describe("SSE — GET /api/tweets/timeline/stream", () => {
       await waitFor(() => stream.chunks.join("").includes("event: connected"));
       const all = stream.chunks.join("");
       expect(all).toContain("event: connected");
-      expect(all).toContain('"userId"');
+      expect(all).toContain('"topic"');
     } finally {
       stream.close();
     }

@@ -3,7 +3,8 @@ import prisma from "../db";
 import {
   subscribe,
   publish,
-  publishTweetToFollowers,
+  publishNewTweet,
+  topics,
   _resetSubscribersForTests,
   _subscriberCountForTests,
 } from "../services/realtime.service";
@@ -83,7 +84,7 @@ describe("realtime.service — pub/sub registry", () => {
     });
   });
 
-  describe("publishTweetToFollowers", () => {
+  describe("publishNewTweet", () => {
     let alice: string;
     let bob: string;
     let carol: string;
@@ -128,12 +129,12 @@ describe("realtime.service — pub/sub registry", () => {
       const bSub = makeSubscriber();
       const cSub = makeSubscriber();
 
-      subscribe(alice, aSub);
-      subscribe(bob, bSub);
-      subscribe(carol, cSub);
+      subscribe(topics.user(alice), aSub);
+      subscribe(topics.user(bob), bSub);
+      subscribe(topics.user(carol), cSub);
 
       const tweet = { id: "tw-1", text: "hi", userId: alice };
-      await publishTweetToFollowers(tweet, alice);
+      await publishNewTweet(tweet, alice);
 
       expect(aSub.received).toEqual([{ event: "tweet:new", data: tweet }]);
       expect(bSub.received).toEqual([{ event: "tweet:new", data: tweet }]);
@@ -146,9 +147,9 @@ describe("realtime.service — pub/sub registry", () => {
         data: { email: "stranger@rt.test", username: "stranger", passwordHash: "x", name: "S" },
       });
       const sSub = makeSubscriber();
-      subscribe(stranger.id, sSub);
+      subscribe(topics.user(stranger.id), sSub);
 
-      await publishTweetToFollowers({ id: "tw-2" }, alice);
+      await publishNewTweet({ id: "tw-2" }, alice);
 
       expect(sSub.received).toEqual([]);
     });

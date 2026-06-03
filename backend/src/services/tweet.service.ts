@@ -1,7 +1,7 @@
 import prisma from "../db";
 import { HttpError } from "../middlewares/error.middleware";
 import { toTweetDTO, tweetIncludeFor } from "../mappers/tweet.mapper";
-import { publishTweetToFollowers } from "./realtime.service";
+import { publishNewTweet, publishNewReply } from "./realtime.service";
 
 export const TWEET_MAX_CHARS = 280;
 
@@ -26,8 +26,8 @@ export async function createTweet(userId: string, text: string, imageUrl?: strin
 
   const dto = toTweetDTO(tweet);
   // Fire-and-forget: SSE broadcast is best-effort, never blocks the response.
-  void publishTweetToFollowers(dto, userId).catch((err) => {
-    console.error("publishTweetToFollowers failed:", err);
+  void publishNewTweet(dto, userId).catch((err) => {
+    console.error("publishNewTweet failed:", err);
   });
 
   return dto;
@@ -44,7 +44,7 @@ export async function createReply(userId: string, parentId: string, text: string
 
   const parent = await prisma.tweet.findUnique({
     where: { id: parentId },
-    select: { id: true },
+    select: { id: true, userId: true, parentId: true },
   });
   if (!parent) throw new HttpError(404, "Tweet not found");
 
@@ -53,7 +53,13 @@ export async function createReply(userId: string, parentId: string, text: string
     include: tweetIncludeFor(userId),
   });
 
-  return toTweetDTO(reply);
+  const dto = toTweetDTO(reply);
+  // Fire-and-forget: live-append to the open thread and bump reply counts.
+  void publishNewReply(dto, parent.id, parent.userId, parent.parentId).catch((err) => {
+    console.error("publishNewReply failed:", err);
+  });
+
+  return dto;
 }
 
 export async function getRepliesFor(parentId: string, requesterId: string, { limit, offset }: Pagination) {

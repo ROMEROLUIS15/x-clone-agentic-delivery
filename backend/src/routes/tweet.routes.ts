@@ -7,7 +7,7 @@ import {
   createReply,
   getReplies,
 } from "../controllers/tweet.controller";
-import { streamTimeline } from "../controllers/realtime.controller";
+import { streamTimeline, streamThread } from "../controllers/realtime.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { sseAuthMiddleware } from "../middlewares/sseAuth.middleware";
 import { validate } from "../middlewares/validate.middleware";
@@ -22,6 +22,7 @@ router.get("/timeline", authMiddleware, requireAuth(getTimeline));
 router.post("/", authMiddleware, mutationLimiter, validate(createTweetSchema), requireAuth(createTweet));
 
 // Thread / replies — registered after the specific /timeline routes so "/:id" never shadows them.
+router.get("/:id/stream", sseAuthMiddleware, requireAuth(streamThread));
 router.get("/:id", authMiddleware, requireAuth(getTweet));
 router.get("/:id/replies", authMiddleware, requireAuth(getReplies));
 router.post("/:id/replies", authMiddleware, mutationLimiter, validate(createTweetSchema), requireAuth(createReply));
