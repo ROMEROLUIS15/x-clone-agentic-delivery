@@ -103,21 +103,21 @@ User 1 (`Carlos García`) follows 5 users and has followers from 5 others, makin
 
 ## Running Tests
 
-### Backend tests (111 integration + unit tests, ≥95% coverage)
+### Backend tests (123 integration + unit tests, ≥95% coverage)
 
 ```bash
 cd backend
 npm test
 ```
 
-### Frontend tests (46 component/integration tests)
+### Frontend tests (50 component/integration tests)
 
 ```bash
 cd frontend
 npm test
 ```
 
-### E2E tests (Playwright — 5 specs)
+### E2E tests (Playwright — 7 specs)
 
 ```bash
 cd frontend
@@ -169,6 +169,8 @@ docker compose down -v
 | `DATABASE_URL` | Yes | `file:./dev.db` | Prisma connection string. SQLite for local dev (`file:./dev.db`), PostgreSQL for Docker (`postgresql://xclone:xclone@postgres:5432/xclone`). |
 | `PORT` | No | `4000` | Backend Express server port. |
 | `JWT_SECRET` | Yes | `change-me-in-production` | Secret key used to sign and verify JWT tokens. **Must be changed in production.** |
+| `UPLOAD_DIR` | No | `uploads` (relative to backend cwd) | Directory where uploaded images are stored. In Docker this is a persistent volume mounted at `/app/uploads`. |
+| `MAX_UPLOAD_BYTES` | No | `5242880` (5 MB) | Maximum accepted image upload size in bytes. |
 
 ---
 

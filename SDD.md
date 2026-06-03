@@ -346,12 +346,26 @@ three were delivered originally (Docker, SSE real-time) and one in this roadmap.
 - Frontend: dedicated `Thread` view, reply composer (generalized `TweetBox`),
   reply affordance with live count on every card.
 - Tests: 14 backend (`replies.test.ts`) + 4 frontend (`thread.test.tsx`) +
-  1 E2E (`replies.spec.ts`). Suite totals: **111 backend / 46 frontend / 5 E2E**.
+  1 E2E (`replies.spec.ts`).
+
+### Phase 10: Image Upload ✅ (DONE)
+
+- Completes the **4th and final official bonus** (all four now implemented).
+- Generic, entity-agnostic `POST /api/uploads` (multer disk storage, MIME +
+  size validation, UUID filenames) returns `{ url }`; reused by both tweet
+  images and avatars — no duplication.
+- `Tweet.imageUrl` (nullable) added; `POST /api/tweets` + replies accept it.
+  Profiles update via `PATCH /api/users/me` (name/bio/avatarUrl). Image
+  references are regex-guarded to our own `/uploads/...` to block URL injection.
+- Served statically at `/uploads`; Docker persists them on a volume with nginx
+  proxying `/uploads`. Configurable via `UPLOAD_DIR` / `MAX_UPLOAD_BYTES`.
+- Frontend: `TweetBox` image picker + preview, `TweetCard` rendering, inline
+  avatar upload on the profile, reusable `api.upload()` helper.
+- Tests: 12 backend (`uploads.test.ts`) + 4 frontend (`uploads.test.tsx`) +
+  2 E2E (`uploads.spec.ts`). **Suite totals: 123 backend / 50 frontend / 7 E2E.**
 
 ### Planned phases
 
-- **Phase 10 — Image Upload** (avatars + tweet images): completes the 4th and
-  final official bonus. Adds file handling/storage; pairs with profile editing.
 - **Phase 11 — Real-time Notifications**: reuses the SSE bus to aggregate
   like / follow / reply events into a notification center with unread badge.
 - **Phase 12 — Retweets & Quote Tweets**: completes the amplification model with

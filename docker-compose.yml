@@ -37,6 +37,9 @@ services:
       JWT_SECRET: ${JWT_SECRET:-INSECURE-DEMO-SECRET-DO-NOT-USE-IN-PRODUCTION}
     ports:
       - "4000:4000"
+    volumes:
+      # Persist user-uploaded images across container restarts.
+      - uploads:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,3 +56,4 @@ services:
 
 volumes:
   pgdata:
+  uploads:

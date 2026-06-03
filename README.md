@@ -101,12 +101,14 @@ Mobile-first CSS with three breakpoints:
 
 ## Bonus Features Implemented
 
-The brief lists 5 optional bonuses and asks for "one or two". Two are implemented end-to-end:
+The brief lists optional bonuses and asks for "one or two". **All four code-level bonuses are implemented end-to-end:**
 
 | Bonus | Where | What it adds |
 |---|---|---|
 | **Real-time updates** | `services/realtime.service.ts` + `controllers/realtime.controller.ts` + `api/useTimelineStream.ts` | SSE-based broadcast of new tweets to followers + author. Sticky in-feed banner with click-to-prepend. 13 backend + 2 frontend tests cover the path. See [Real-time Timeline (SSE)](#real-time-timeline-sse) for the architecture rationale. |
-| **Docker** | `docker-compose.yml` + `backend/Dockerfile` + `frontend/Dockerfile` | Single-command stack (`docker compose up --build`) with PostgreSQL 16, hardened secrets via env interpolation, healthchecks, and the seed auto-running on first boot. |
+| **Docker** | `docker-compose.yml` + `backend/Dockerfile` + `frontend/Dockerfile` | Single-command stack (`docker compose up --build`) with PostgreSQL 16, hardened secrets via env interpolation, healthchecks, persistent uploads volume, and the seed auto-running on first boot. |
+| **Reply threads** | self-relation on `Tweet` | Threaded conversations — see [Conversations — Threaded Replies](#conversations--threaded-replies). |
+| **Image upload** | `middlewares/upload.middleware.ts` + `routes/upload.routes.ts` | Avatar and tweet image uploads — see [Image Upload](#image-upload). |
 
 ---
 
@@ -122,6 +124,23 @@ Tweets can be replied to, forming threads. The model reuses the existing `Tweet`
 | **DTO** | Every tweet now carries `replyCount` (from `_count.replies`) and `parentId`, so cards render the reply affordance without an extra request. |
 | **Frontend** | A dedicated `Thread` view shows the parent context, the focused tweet, an inline reply composer (the generalized `TweetBox`), and the paginated reply list. |
 | **Tests** | 14 backend integration tests (`replies.test.ts`) + 4 frontend tests (`thread.test.tsx`) + 1 Playwright E2E spec (`replies.spec.ts`) covering creation, validation, 404s, pagination, cascade delete, timeline exclusion, and the full reply-and-count flow. |
+
+---
+
+## Image Upload
+
+Users can attach an image to any tweet/reply and change their profile avatar. The
+design is deliberately **decoupled**: a single generic upload endpoint handles the
+file, and entities merely store the resulting URL — so the same path serves both
+tweet images and avatars (and any future image need) without duplication.
+
+| Aspect | Decision |
+|---|---|
+| **Storage** | Local filesystem via `multer` disk storage (no third-party service, consistent with the custom-auth constraint). Files are served statically at `/uploads`; in Docker they live on a persistent volume and nginx proxies `/uploads` to the backend. Configurable via `UPLOAD_DIR` / `MAX_UPLOAD_BYTES`. |
+| **Endpoint** | `POST /api/uploads` (multipart `image`) → `{ url }`. Generic and entity-agnostic. Validates MIME type (jpeg/png/gif/webp) and size (≤ 5 MB); multer errors are normalized to `400`. Random UUID filenames — the client name is never trusted. |
+| **Wiring** | Tweets gained a nullable `imageUrl`; `POST /api/tweets` and replies accept it. Profiles update via `PATCH /api/users/me` (`name` / `bio` / `avatarUrl`). Both validate that `imageUrl`/`avatarUrl` point at our own `/uploads/...` (regex-guarded) to prevent arbitrary-URL injection into `<img src>`. |
+| **Frontend** | `TweetBox` gains an image picker with live preview + remove; `TweetCard` renders attachments; the profile avatar has an inline upload control. A reusable `api.upload()` helper sends `FormData`. |
+| **Tests** | 12 backend integration tests (`uploads.test.ts`) + 4 frontend tests (`uploads.test.tsx`) + 2 Playwright E2E specs (`uploads.spec.ts`) covering upload validation, size/MIME rejection, auth, tweet-image persistence, avatar update, and the full attach-and-render flow. |
 
 ---
 

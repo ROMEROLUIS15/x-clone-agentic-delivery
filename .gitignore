@@ -39,6 +39,10 @@ desktop.ini
 *.sw?
 .env.example.swp
 
+# Uploaded files (user-generated content)
+uploads/
+uploads-test/
+
 # SQLite database files and locks
 *.db
 *.db-journal
