@@ -18,7 +18,7 @@ A full-stack Twitter/X clone built with TypeScript, featuring custom authenticat
 | **Testing (unit/integration)** | Vitest + Supertest | Blazing-fast native ESM test runner. Supertest provides HTTP assertions without spinning up a full server. |
 | **Testing (E2E)** | Playwright | Industry-standard browser automation; covers auth, tweet creation, follow/like flows. |
 | **Containerization** | Docker Compose | Single-command production stack with PostgreSQL 16, backend, and nginx-served frontend. |
-| **Real-time** | Server-Sent Events (native) | One-directional push (server→client) for new tweets in the timeline. Simpler than WebSocket, plain HTTP, browser-native reconnection. No new dependencies. |
+| **Real-time** | Server-Sent Events (native) | One-directional push (server→client) for new tweets, replies and likes across timeline, profiles and threads (topic-based). Simpler than WebSocket, plain HTTP, browser-native reconnection. No new dependencies. |
 
 ---
 
@@ -57,9 +57,19 @@ erDiagram
     Tweet ||--o{ Like : "receives"
 ```
 
-### Real-time Timeline (SSE)
+### Real-time (topic-based SSE)
 
-When a user posts a tweet, every connected follower (and the author) receives a `tweet:new` event over a Server-Sent Events stream. The frontend buffers incoming events and surfaces them as a sticky **"N new tweets — click to view"** banner above the feed — never auto-inserting, to avoid jarring mid-scroll content shifts.
+Real-time updates are **topic-based**. The registry is a `Map<topic, Set<Subscriber>>` with three topic namespaces, and each view opens exactly one Server-Sent Events connection to the topic it cares about:
+
+| Topic | Stream endpoint | Who subscribes |
+|---|---|---|
+| `user:<id>` | `GET /api/tweets/timeline/stream` | the Home timeline (self + followed authors) |
+| `profile:<id>` | `GET /api/users/:id/stream` | anyone viewing that user's profile |
+| `thread:<id>` | `GET /api/tweets/:id/stream` | anyone viewing that tweet's thread |
+
+Three event types flow over these topics — `tweet:new`, `reply:new`, `like:updated` — and the backend publishes each to *every* topic where the affected tweet can be visible. The upshot: a viewer sees a new reply in a thread, a new tweet on a profile, or a like-count change **live, even if they don't follow the author**, because they're subscribed to the thread/profile topic rather than only their own timeline.
+
+On the Home timeline, incoming `tweet:new` events are buffered behind a sticky **"N new tweets — click to view"** banner — never auto-inserting, to avoid jarring mid-scroll content shifts. On profiles and threads, updates apply in place.
 
 ```
                        HTTP POST /api/tweets
@@ -69,7 +79,7 @@ When a user posts a tweet, every connected follower (and the author) receives a 
                                           tweet.service.createTweet
                                                     │ (fire-and-forget)
                                                     ▼
-                                      publishTweetToFollowers(tweet, authorId)
+                                          publishNewTweet(tweet, authorId)
                                                     │
                               ┌─────────────────────┼─────────────────────┐
                               ▼                     ▼                     ▼
@@ -85,7 +95,7 @@ When a user posts a tweet, every connected follower (and the author) receives a 
 
 **Auth on the stream.** `EventSource` cannot send custom headers, so the SSE endpoint accepts the JWT via `?token=` query parameter in addition to the `Authorization` header. The trade-off (tokens in URLs can leak into access logs) is documented at the top of `sseAuth.middleware.ts` along with the production-grade follow-up: a short-lived "stream ticket" endpoint that mints a 60-second token bound to that connection.
 
-**Scope.** The subscriber registry is an in-memory `Map<userId, Set<Subscriber>>` — single-instance only. The Redis-pubsub swap is a ~30-line change isolated to `realtime.service.ts`.
+**Scope.** The subscriber registry is an in-memory `Map<topic, Set<Subscriber>>` — single-instance only. The Redis-pubsub swap is a ~30-line change isolated to `realtime.service.ts`.
 
 ### Responsive Layout
 
@@ -105,7 +115,7 @@ The brief lists optional bonuses and asks for "one or two". **All four code-leve
 
 | Bonus | Where | What it adds |
 |---|---|---|
-| **Real-time updates** | `services/realtime.service.ts` + `controllers/realtime.controller.ts` + `api/useTimelineStream.ts` | SSE-based broadcast of new tweets to followers + author. Sticky in-feed banner with click-to-prepend. 13 backend + 2 frontend tests cover the path. See [Real-time Timeline (SSE)](#real-time-timeline-sse) for the architecture rationale. |
+| **Real-time updates** | `services/realtime.service.ts` + `controllers/realtime.controller.ts` + `api/useEventStream.ts` | Topic-based SSE (`user:` / `profile:` / `thread:`) pushing `tweet:new`, `reply:new` and `like:updated` to every view where a tweet is visible — live on the timeline, profiles and threads, follower or not. See [Real-time (topic-based SSE)](#real-time-topic-based-sse) for the architecture rationale. |
 | **Docker** | `docker-compose.yml` + `backend/Dockerfile` + `frontend/Dockerfile` | Single-command stack (`docker compose up --build`) with PostgreSQL 16, hardened secrets via env interpolation, healthchecks, persistent uploads volume, and the seed auto-running on first boot. |
 | **Reply threads** | self-relation on `Tweet` | Threaded conversations — see [Conversations — Threaded Replies](#conversations--threaded-replies). |
 | **Image upload** | `middlewares/upload.middleware.ts` + `routes/upload.routes.ts` | Avatar and tweet image uploads — see [Image Upload](#image-upload). |

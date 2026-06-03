@@ -103,21 +103,21 @@ User 1 (`Carlos García`) follows 5 users and has followers from 5 others, makin
 
 ## Running Tests
 
-### Backend tests (123 integration + unit tests, ≥95% coverage)
+### Backend tests (127 integration + unit tests, ≥95% coverage)
 
 ```bash
 cd backend
 npm test
 ```
 
-### Frontend tests (50 component/integration tests)
+### Frontend tests (52 component/integration tests)
 
 ```bash
 cd frontend
 npm test
 ```
 
-### E2E tests (Playwright — 8 tests across 6 specs)
+### E2E tests (Playwright — 9 tests across 7 specs)
 
 Self-contained: Playwright boots both the backend (with `NODE_ENV=test`, which
 relaxes the auth rate limiter) and the frontend automatically, so no servers

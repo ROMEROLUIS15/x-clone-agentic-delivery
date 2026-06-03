@@ -364,11 +364,28 @@ three were delivered originally (Docker, SSE real-time) and one in this roadmap.
 - Tests: 12 backend (`uploads.test.ts`) + 4 frontend (`uploads.test.tsx`) +
   2 E2E (`uploads.spec.ts`). **Suite totals: 123 backend / 50 frontend / 7 E2E.**
 
+### Phase 11: Real-time overhaul — topic-based SSE ✅ (DONE)
+
+- Generalized the SSE registry from per-user to **topic-based**
+  (`user:<id>` / `profile:<id>` / `thread:<id>`), with one stream endpoint per
+  view (`/api/tweets/timeline/stream`, `/api/users/:id/stream`,
+  `/api/tweets/:id/stream`).
+- Three events — `tweet:new`, `reply:new`, `like:updated` — are published to
+  every topic where the affected tweet is visible, so replies, new tweets and
+  like changes appear live on the **timeline, profiles and threads even for
+  non-followers**. Fixes the gaps where replies/likes/new-tweets didn't update
+  in real time outside the home feed.
+- Frontend: a single reusable `useEventStream` hook drives Home, the profile
+  feed and the thread view.
+- Tests: backend `sseTopics.test.ts` (4) + updated `realtime.test.ts`/`sse.test.ts`;
+  frontend `realtimeThread.test.tsx` (2); E2E `realtime.spec.ts` (cross-user,
+  non-follower). **Suite totals: 127 backend / 52 frontend / 9 E2E.**
+
 ### Planned phases
 
-- **Phase 11 — Real-time Notifications**: reuses the SSE bus to aggregate
-  like / follow / reply events into a notification center with unread badge.
-- **Phase 12 — Retweets & Quote Tweets**: completes the amplification model with
+- **Phase 12 — Notification center**: build on the topic SSE to aggregate
+  like / follow / reply events into a notifications page with an unread badge.
+- **Phase 13 — Retweets & Quote Tweets**: completes the amplification model with
   attributed timeline merging.
-- **Phase 13 — Polish**: bookmarks, hashtags + trends, profile edit, dark-mode
+- **Phase 14 — Polish**: bookmarks, hashtags + trends, profile edit, dark-mode
   toggle.
