@@ -8,26 +8,27 @@ const PNG_1x1 = Buffer.from(
 const pngFile = { name: "pic.png", mimeType: "image/png", buffer: PNG_1x1 };
 
 test.describe("Image Upload E2E Flow", () => {
-  const uniqueId = Date.now();
-  const email = `uploads-e2e-${uniqueId}@example.com`;
-  const username = `uploaduser_${uniqueId}`;
   const password = "password123";
   const name = "Upload E2E User";
 
-  async function register(page: import("@playwright/test").Page) {
+  // Unique identity per call so the tests never collide on a duplicate email,
+  // even when several land on the same Playwright worker.
+  async function register(page: import("@playwright/test").Page): Promise<string> {
+    const uid = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
     await page.goto("/");
     await page.locator("text=Sign up").click();
     await expect(page.locator("h1")).toHaveText("Create your account");
     await page.locator('input[id="name"]').fill(name);
-    await page.locator('input[id="email"]').fill(email);
-    await page.locator('input[id="username"]').fill(username);
+    await page.locator('input[id="email"]').fill(`uploads-${uid}@example.com`);
+    await page.locator('input[id="username"]').fill(`upload_${uid}`);
     await page.locator('input[id="password"]').fill(password);
     await page.locator('button[type="submit"]').click();
     await expect(page.locator("h1.main-header-title")).toHaveText("Home");
+    return uid;
   }
 
   test("should attach an image to a tweet and render it in the feed", async ({ page }) => {
-    await register(page);
+    const uniqueId = await register(page);
 
     const tweetText = `Tweet with image ${uniqueId}`;
     await page.getByTestId("tweet-image-input").setInputFiles(pngFile);
@@ -52,7 +53,7 @@ test.describe("Image Upload E2E Flow", () => {
   });
 
   test("should let a user comment on a tweet that has an image", async ({ page }) => {
-    await register(page);
+    const uniqueId = await register(page);
 
     const tweetText = `Commentable image tweet ${uniqueId}`;
     await page.getByTestId("tweet-image-input").setInputFiles(pngFile);

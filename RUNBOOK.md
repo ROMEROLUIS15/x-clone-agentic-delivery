@@ -117,12 +117,14 @@ cd frontend
 npm test
 ```
 
-### E2E tests (Playwright — 7 specs)
+### E2E tests (Playwright — 8 tests across 6 specs)
+
+Self-contained: Playwright boots both the backend (with `NODE_ENV=test`, which
+relaxes the auth rate limiter) and the frontend automatically, so no servers
+need to be started manually. The dev database must already be migrated/seeded.
 
 ```bash
 cd frontend
-
-# Ensure both backend and frontend dev servers are running first
 npm run test:e2e
 ```
 
