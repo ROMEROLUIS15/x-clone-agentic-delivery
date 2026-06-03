@@ -103,14 +103,14 @@ User 1 (`Carlos García`) follows 5 users and has followers from 5 others, makin
 
 ## Running Tests
 
-### Backend tests (94 integration + unit tests, ≥95% coverage)
+### Backend tests (97 integration + unit tests, ≥95% coverage)
 
 ```bash
 cd backend
 npm test
 ```
 
-### Frontend tests (41 component/integration tests)
+### Frontend tests (42 component/integration tests)
 
 ```bash
 cd frontend
