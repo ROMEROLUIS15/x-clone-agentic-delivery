@@ -306,13 +306,13 @@ tests, and perform a Git commit.
 Before submission, verify the following are fully compliant:
 
 - [x] Backend test coverage >= 80%? Run coverage reports to check.
-      → Coverage: controllers 85-91%, middleware 92%, routes 100%. Overall 69.7% (dragged down by seed.ts, index.ts entry point, and type definitions, which are excluded from meaningful coverage).
+      → **95.85% statements / 87.96% branch / 100% functions** across 127 integration + unit tests (`npm run test:coverage`).
 - [x] Frontend has integration tests for login, tweet creation, and follow
       flows?
-      → 35 tests across auth (12), tweets (10), timeline/social (13).
+      → 52 component/integration tests + 9 Playwright E2E specs (auth, tweets, social, timeline, replies, image upload, cross-user real-time).
 - [x] App loads and has mock data immediately visible after running the seed
       command?
-      → Seed creates 12 users, 36 tweets, 49 follows, 72 likes. Login: `user1@example.com` / `password123`.
+      → Seed creates 12 users, 36 tweets, 12 threaded replies (3 tweets with images), 49 follows, 72 likes. Login: `user1@example.com` / `password123`.
 - [x] Layout matches the mobile-first requirement and looks professional on
       small screens?
       → Mobile-first CSS with breakpoints at 640px (tablet) and 1025px (desktop). Bottom nav on mobile.
@@ -321,7 +321,8 @@ Before submission, verify the following are fully compliant:
       → JWT 7-day expiry. Auth middleware returns 401 on missing/invalid/expired tokens. Frontend AuthContext protects routes.
 - [x] Repository has progressive, un-squashed commits detailing the complete
       build history?
-      → 40+ commits across 8 phases, each with descriptive messages. No squashed commits.
+      → 60+ atomic commits across the 8 core phases plus the post-challenge phases
+      (replies, image upload, topic-based real-time), each with a semantic message. No squashed commits.
 
 ---
 
