@@ -154,6 +154,22 @@ tweet images and avatars (and any future image need) without duplication.
 
 ---
 
+## Notifications
+
+A real-time notification center built directly on the topic-based SSE bus — no
+new transport, no polling.
+
+| Aspect | Decision |
+|---|---|
+| **Model** | `Notification` (recipient, actor, type `like`/`follow`/`reply`, optional tweet, `read` flag, indexed on `[recipientId, read]`). |
+| **Generation** | Hooked into the like / follow / reply services as **fire-and-forget** so a failed notification never breaks the underlying action. Never notifies you about your own action; like/follow are de-duplicated so toggling doesn't spam. |
+| **Delivery** | Each new notification is pushed as a `notification:new` event to the recipient's `user:` topic — so it arrives live wherever they are in the app. |
+| **Endpoints** | `GET /api/notifications` (paginated, includes unread count), `GET /api/notifications/unread-count`, `POST /api/notifications/read` (one by id, or all). |
+| **Frontend** | A global `NotificationProvider` owns the unread count with its **own persistent SSE subscription**, so the bell badge stays live on every view (the home stream only exists on Home). A Notifications view lists activity, links through to the relevant thread/profile, and clears the badge on open. |
+| **Tests** | 11 backend (`notifications.test.ts`) + 2 frontend (`notifications.test.tsx`) + 1 E2E (`notifications.spec.ts`, cross-user live badge + list) covering generation rules, de-dup, no-self-notify, read state, and live delivery. |
+
+---
+
 ## Custom Auth Flow
 
 1. **Registration** — Client sends `{ email, username, password, name }`. A `zod` schema (`schemas/auth.schema.ts`) validates format (email, username ≥ 3 chars alphanumeric, password ≥ 6 chars) before the controller ever runs. `authService.registerUser` checks uniqueness of email + username, hashes the password with `bcrypt` (10 salt rounds), stores the user, and returns a signed JWT.

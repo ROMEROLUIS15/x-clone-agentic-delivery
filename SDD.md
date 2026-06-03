@@ -306,10 +306,10 @@ tests, and perform a Git commit.
 Before submission, verify the following are fully compliant:
 
 - [x] Backend test coverage >= 80%? Run coverage reports to check.
-      → **95.85% statements / 87.96% branch / 100% functions** across 127 integration + unit tests (`npm run test:coverage`).
+      → **≥95% statements / 100% functions** across 138 integration + unit tests (`npm run test:coverage`).
 - [x] Frontend has integration tests for login, tweet creation, and follow
       flows?
-      → 52 component/integration tests + 9 Playwright E2E specs (auth, tweets, social, timeline, replies, image upload, cross-user real-time).
+      → 54 component/integration tests + 10 Playwright E2E specs (auth, tweets, social, timeline, replies, image upload, cross-user real-time, notifications).
 - [x] App loads and has mock data immediately visible after running the seed
       command?
       → Seed creates 12 users, 36 tweets, 12 threaded replies (3 tweets with images), 49 follows, 72 likes. Login: `user1@example.com` / `password123`.
@@ -382,10 +382,27 @@ three were delivered originally (Docker, SSE real-time) and one in this roadmap.
   frontend `realtimeThread.test.tsx` (2); E2E `realtime.spec.ts` (cross-user,
   non-follower). **Suite totals: 127 backend / 52 frontend / 9 E2E.**
 
+### Phase 12: Notification center ✅ (DONE)
+
+- New `Notification` model (recipient, actor, type [like|follow|reply],
+  optional tweet, read flag) + migration in both schemas.
+- Notifications are generated on like / follow / reply (fire-and-forget so they
+  never block the action), never for your own actions, and like/follow are
+  de-duplicated so toggling doesn't spam. Each is pushed live over the existing
+  topic SSE as a `notification:new` event to the recipient's `user:` topic.
+- Endpoints: `GET /api/notifications` (paginated, with unread count),
+  `GET /api/notifications/unread-count`, `POST /api/notifications/read`
+  (one by id, or all).
+- Frontend: a global `NotificationProvider` owns a live unread badge (its own
+  persistent SSE subscription so the badge updates on every view); a bell nav
+  item with the badge; and a Notifications view that lists activity, links to
+  the relevant thread/profile, and clears the badge on open.
+- Tests: 11 backend (`notifications.test.ts`) + 2 frontend
+  (`notifications.test.tsx`) + 1 E2E (`notifications.spec.ts`, cross-user live
+  badge + list). **Suite totals: 138 backend / 54 frontend / 10 E2E.**
+
 ### Planned phases
 
-- **Phase 12 — Notification center**: build on the topic SSE to aggregate
-  like / follow / reply events into a notifications page with an unread badge.
 - **Phase 13 — Retweets & Quote Tweets**: completes the amplification model with
   attributed timeline merging.
 - **Phase 14 — Polish**: bookmarks, hashtags + trends, profile edit, dark-mode

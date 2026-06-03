@@ -79,7 +79,7 @@ The frontend dev server proxies `/api/*` requests to `http://localhost:4000` (co
 
 ## Seed Data
 
-The seed script creates 12 realistic users with bios, avatars, 36 tweets, 12 threaded replies, 49 follow relationships, and 72 cross-likes.
+The seed script creates 12 realistic users with bios, avatars, 36 tweets, 12 threaded replies, 49 follow relationships, 72 cross-likes, and 6 sample notifications for `user1`.
 
 ```bash
 cd backend
@@ -103,21 +103,21 @@ User 1 (`Carlos García`) follows 5 users and has followers from 5 others, makin
 
 ## Running Tests
 
-### Backend tests (127 integration + unit tests, ≥95% coverage)
+### Backend tests (138 integration + unit tests, ≥95% coverage)
 
 ```bash
 cd backend
 npm test
 ```
 
-### Frontend tests (52 component/integration tests)
+### Frontend tests (54 component/integration tests)
 
 ```bash
 cd frontend
 npm test
 ```
 
-### E2E tests (Playwright — 9 tests across 7 specs)
+### E2E tests (Playwright — 10 tests across 8 specs)
 
 Self-contained: Playwright boots both the backend (with `NODE_ENV=test`, which
 relaxes the auth rate limiter) and the frontend automatically, so no servers
