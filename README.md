@@ -110,6 +110,21 @@ The brief lists 5 optional bonuses and asks for "one or two". Two are implemente
 
 ---
 
+## Conversations — Threaded Replies
+
+Tweets can be replied to, forming threads. The model reuses the existing `Tweet` entity via a **self-relation** (`parentId`) rather than a separate `Reply` table — a reply *is* a tweet with a parent, so it inherits likes, deletion, and DTO shaping for free.
+
+| Aspect | Decision |
+|---|---|
+| **Data model** | `Tweet.parentId` self-relation (`@relation("TweetReplies")`), `onDelete: Cascade` so deleting a tweet removes its whole subtree. Indexed on `parentId`. |
+| **Endpoints** | `GET /api/tweets/:id` (tweet + parent context), `GET /api/tweets/:id/replies` (paginated, chronological), `POST /api/tweets/:id/replies` (reuses the 280-char `zod` schema + `mutationLimiter`). |
+| **Timeline hygiene** | Replies are excluded from the home timeline and profile (only top-level `parentId: null` tweets), mirroring X's default — replies live in the thread view. |
+| **DTO** | Every tweet now carries `replyCount` (from `_count.replies`) and `parentId`, so cards render the reply affordance without an extra request. |
+| **Frontend** | A dedicated `Thread` view shows the parent context, the focused tweet, an inline reply composer (the generalized `TweetBox`), and the paginated reply list. |
+| **Tests** | 14 backend integration tests (`replies.test.ts`) + 4 frontend tests (`thread.test.tsx`) + 1 Playwright E2E spec (`replies.spec.ts`) covering creation, validation, 404s, pagination, cascade delete, timeline exclusion, and the full reply-and-count flow. |
+
+---
+
 ## Custom Auth Flow
 
 1. **Registration** — Client sends `{ email, username, password, name }`. A `zod` schema (`schemas/auth.schema.ts`) validates format (email, username ≥ 3 chars alphanumeric, password ≥ 6 chars) before the controller ever runs. `authService.registerUser` checks uniqueness of email + username, hashes the password with `bcrypt` (10 salt rounds), stores the user, and returns a signed JWT.
@@ -267,7 +282,7 @@ Concretely: Gemini caught planning gaps that the implementer would have papered 
 │   ├── Dockerfile
 │   └── package.json
 ├── frontend/
-│   ├── e2e/                       # Playwright E2E tests (4 specs)
+│   ├── e2e/                       # Playwright E2E tests (5 specs)
 │   ├── src/
 │   │   ├── api/                   # Central apiClient (Bearer injection, 401 auto-logout)
 │   │   ├── components/            # React components (Avatar, TweetCard reused across views)
