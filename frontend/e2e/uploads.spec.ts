@@ -43,6 +43,34 @@ test.describe("Image Upload E2E Flow", () => {
     const image = card.locator(".tweet-card-image");
     await expect(image).toBeVisible();
     await expect(image).toHaveAttribute("src", /\/uploads\//);
+
+    // Regression guard: the image must actually LOAD, not just have a src.
+    // (A missing /uploads dev proxy previously rendered these as broken images.)
+    await expect
+      .poll(() => image.evaluate((img) => (img as HTMLImageElement).naturalWidth))
+      .toBeGreaterThan(0);
+  });
+
+  test("should let a user comment on a tweet that has an image", async ({ page }) => {
+    await register(page);
+
+    const tweetText = `Commentable image tweet ${uniqueId}`;
+    await page.getByTestId("tweet-image-input").setInputFiles(pngFile);
+    await expect(page.getByAltText("Selected attachment")).toBeVisible();
+    await page.locator(".tweet-box-textarea").fill(tweetText);
+    await page.locator(".tweet-box .tweet-btn").click();
+
+    const card = page.locator(".tweet-card", { hasText: tweetText });
+    await expect(card).toBeVisible();
+
+    // Open the thread from the image tweet and post a comment
+    await card.locator(".tweet-reply-btn").click();
+    await expect(page.locator("h1.main-header-title")).toHaveText("Thread");
+
+    const comment = `Comment on image ${uniqueId}`;
+    await page.locator('textarea[placeholder="Post your reply"]').fill(comment);
+    await page.locator(".tweet-box .tweet-btn").click();
+    await expect(page.locator(`text=${comment}`)).toBeVisible();
   });
 
   test("should update the profile avatar via upload", async ({ page }) => {
