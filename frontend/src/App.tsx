@@ -7,6 +7,7 @@ import { Layout } from "./components/Layout";
 import { Home } from "./components/Home";
 import { Profile } from "./components/Profile";
 import { Search } from "./components/Search";
+import { Thread } from "./components/Thread";
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
@@ -77,6 +78,8 @@ const AppContent: React.FC = () => {
         return <Profile />;
       case "search":
         return <Search />;
+      case "thread":
+        return <Thread />;
       default:
         return <Home />;
     }

@@ -6,6 +6,7 @@ export interface Tweet {
   id: string;
   text: string;
   userId: string;
+  parentId: string | null;
   createdAt: string;
   user: {
     id: string;
@@ -14,6 +15,7 @@ export interface Tweet {
     avatarUrl: string | null;
   };
   likesCount: number;
+  replyCount: number;
   liked: boolean;
 }
 
@@ -23,6 +25,10 @@ interface TweetCardProps {
   onLike: (tweetId: string, currentlyLiked: boolean) => void;
   onDelete: (tweetId: string) => void;
 }
+
+// X-style reply (speech bubble) outline icon.
+const REPLY_PATH =
+  "M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l2.063-.05v2.36l5.082-2.82c1.96-1.09 3.18-3.14 3.18-5.37 0-3.39-2.75-6.13-6.129-6.13H9.756z";
 
 function formatDate(dateStr: string) {
   const date = new Date(dateStr);
@@ -44,6 +50,7 @@ const HEART_PATH_OUTLINE =
 export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUserId, onLike, onDelete }) => {
   const { navigateTo } = useNavigation();
   const goToProfile = () => navigateTo("profile", { userId: tweet.user.id });
+  const goToThread = () => navigateTo("thread", { tweetId: tweet.id });
 
   return (
     <article className="tweet-card">
@@ -59,8 +66,20 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUserId, onLi
           <span className="tweet-card-dot">·</span>
           <span className="tweet-card-date">{formatDate(tweet.createdAt)}</span>
         </div>
-        <p className="tweet-card-text">{tweet.text}</p>
+        <p className="tweet-card-text" onClick={goToThread} style={{ cursor: "pointer" }}>
+          {tweet.text}
+        </p>
         <div className="tweet-card-actions">
+          <button
+            className="tweet-reply-btn"
+            onClick={goToThread}
+            aria-label="Reply"
+          >
+            <svg viewBox="0 0 24 24" className="reply-icon" width="18" height="18">
+              <path d={REPLY_PATH} fill="currentColor" />
+            </svg>
+            <span className="reply-count">{tweet.replyCount}</span>
+          </button>
           <button
             className={`tweet-like-btn ${tweet.liked ? "liked" : ""}`}
             onClick={() => onLike(tweet.id, tweet.liked)}

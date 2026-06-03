@@ -693,6 +693,78 @@ button, input, textarea {
   }
 }
 
+/* Reply button — mirrors the like button with X's blue accent */
+.tweet-reply-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  transition: all 0.15s ease;
+}
+
+.reply-icon {
+  transition: transform 0.15s ease;
+}
+
+@media (hover: hover) {
+  .tweet-reply-btn:hover {
+    color: #1d9bf0;
+    background-color: rgba(29, 155, 240, 0.1);
+  }
+  .tweet-reply-btn:hover .reply-icon {
+    transform: scale(1.2);
+  }
+}
+
+/* Thread / replies view */
+.thread-header {
+  gap: 16px;
+}
+
+.thread-back-btn {
+  background: none;
+  border: none;
+  color: var(--text-primary, #e7e9ea);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 9999px;
+  transition: background-color 0.15s ease;
+}
+
+@media (hover: hover) {
+  .thread-back-btn:hover {
+    background-color: rgba(231, 233, 234, 0.1);
+  }
+}
+
+.thread-focus .tweet-card {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.thread-parent {
+  position: relative;
+}
+
+.thread-parent .tweet-card {
+  border-bottom: none;
+}
+
+/* Vertical connector line linking a parent tweet to its thread below */
+.thread-connector {
+  width: 2px;
+  height: 16px;
+  background-color: var(--border-color);
+  margin-left: 35px;
+}
+
 /* Profile Page */
 .profile-header {
   border-bottom: 1px solid var(--border-color);

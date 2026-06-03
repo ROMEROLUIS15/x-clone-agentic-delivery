@@ -4,9 +4,18 @@ import { api } from "../api/client";
 
 interface TweetBoxProps {
   onTweetCreated: () => void;
+  /** When set, the box posts a reply to this tweet instead of a top-level tweet. */
+  parentId?: string;
+  placeholder?: string;
+  submitLabel?: string;
 }
 
-export const TweetBox: React.FC<TweetBoxProps> = ({ onTweetCreated }) => {
+export const TweetBox: React.FC<TweetBoxProps> = ({
+  onTweetCreated,
+  parentId,
+  placeholder = "What is happening?!",
+  submitLabel = "Post",
+}) => {
   const { token } = useAuth();
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -19,9 +28,11 @@ export const TweetBox: React.FC<TweetBoxProps> = ({ onTweetCreated }) => {
     const trimmed = text.trim();
     if (!trimmed || isOverLimit || !token) return;
 
+    const endpoint = parentId ? `/api/tweets/${parentId}/replies` : "/api/tweets";
+
     setSubmitting(true);
     try {
-      await api.post("/api/tweets", { text: trimmed }, token);
+      await api.post(endpoint, { text: trimmed }, token);
       setText("");
       onTweetCreated();
     } catch (err) {
@@ -38,7 +49,7 @@ export const TweetBox: React.FC<TweetBoxProps> = ({ onTweetCreated }) => {
       <div className="tweet-box-input-area">
         <textarea
           className="tweet-box-textarea"
-          placeholder="What is happening?!"
+          placeholder={placeholder}
           value={text}
           onChange={(e) => setText(e.target.value)}
           maxLength={300}
@@ -55,7 +66,7 @@ export const TweetBox: React.FC<TweetBoxProps> = ({ onTweetCreated }) => {
             disabled={!text.trim() || isOverLimit || submitting}
             onClick={handleSubmit}
           >
-            {submitting ? "Posting..." : "Post"}
+            {submitting ? "Posting..." : submitLabel}
           </button>
         </div>
       </div>

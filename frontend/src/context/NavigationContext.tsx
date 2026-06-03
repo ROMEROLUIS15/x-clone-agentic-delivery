@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useState } from "react";
 
-export type ViewType = "login" | "register" | "home" | "profile" | "search";
+export type ViewType = "login" | "register" | "home" | "profile" | "search" | "thread";
 
 export interface ViewParams {
   userId?: string;
   username?: string;
   query?: string;
+  tweetId?: string;
 }
 
 interface NavigationContextType {
