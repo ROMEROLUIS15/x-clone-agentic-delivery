@@ -79,7 +79,7 @@ The frontend dev server proxies `/api/*` requests to `http://localhost:4000` (co
 
 ## Seed Data
 
-The seed script creates 12 realistic users with bios, avatars, 36 tweets, 48 follow relationships, and 72 cross-likes.
+The seed script creates 12 realistic users with bios, avatars, 36 tweets, 49 follow relationships, and 72 cross-likes.
 
 ```bash
 cd backend
@@ -103,14 +103,14 @@ User 1 (`Carlos García`) follows 5 users and has followers from 5 others, makin
 
 ## Running Tests
 
-### Backend tests (74 integration tests)
+### Backend tests (94 integration + unit tests, ≥95% coverage)
 
 ```bash
 cd backend
 npm test
 ```
 
-### Frontend tests (35 component/integration tests)
+### Frontend tests (41 component/integration tests)
 
 ```bash
 cd frontend

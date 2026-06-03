@@ -171,5 +171,26 @@ describe("Tweets Integration Tests", () => {
 
       expect(response.status).toBe(401);
     });
+
+    it("should delete a tweet that has likes (regression: cascade on Like.tweet)", async () => {
+      // Another user likes the tweet
+      await request(app)
+        .post(`/api/tweets/${tweetId}/like`)
+        .set("Authorization", `Bearer ${otherToken}`);
+
+      // Owner deletes — must succeed even though related Like rows exist
+      const response = await request(app)
+        .delete(`/api/tweets/${tweetId}`)
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(response.status).toBe(200);
+
+      const tweet = await prisma.tweet.findUnique({ where: { id: tweetId } });
+      expect(tweet).toBeNull();
+
+      // The like row should be gone too (cascade)
+      const orphanedLikes = await prisma.like.findMany({ where: { tweetId } });
+      expect(orphanedLikes).toEqual([]);
+    });
   });
 });

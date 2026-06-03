@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { api } from "../api/client";
 
 interface TweetBoxProps {
   onTweetCreated: () => void;
@@ -20,19 +21,9 @@ export const TweetBox: React.FC<TweetBoxProps> = ({ onTweetCreated }) => {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/tweets", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ text: trimmed }),
-      });
-
-      if (res.ok) {
-        setText("");
-        onTweetCreated();
-      }
+      await api.post("/api/tweets", { text: trimmed }, token);
+      setText("");
+      onTweetCreated();
     } catch (err) {
       console.error("Tweet creation error:", err);
     } finally {

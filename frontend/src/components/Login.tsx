@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { useAuth } from "../context/AuthContext";
+import { useAuth, User } from "../context/AuthContext";
 import { useNavigation } from "../context/NavigationContext";
+import { api, ApiError } from "../api/client";
+import { PasswordInput } from "./PasswordInput";
 
 export const Login: React.FC = () => {
   const { login } = useAuth();
@@ -22,28 +24,19 @@ export const Login: React.FC = () => {
     setSubmitting(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          emailOrUsername: identifier,
-          password,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        login(data.token, data.user);
-        navigateTo("home");
-      } else {
-        setError(data.error || "Login failed. Please check your credentials.");
-      }
+      const data = await api.post<{ token: string; user: User }>(
+        "/api/auth/login",
+        { emailOrUsername: identifier, password }
+      );
+      login(data.token, data.user);
+      navigateTo("home");
     } catch (err) {
-      console.error("Login request error:", err);
-      setError("Network error. Please try again later.");
+      if (err instanceof ApiError) {
+        setError(err.message || "Login failed. Please check your credentials.");
+      } else {
+        console.error("Login request error:", err);
+        setError("Network error. Please try again later.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -84,16 +77,15 @@ export const Login: React.FC = () => {
             <label className="form-label" htmlFor="password">
               Password
             </label>
-            <input
-              className="form-input"
-              type="password"
+            <PasswordInput
               id="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={setPassword}
               placeholder="Enter your password"
               disabled={submitting}
               maxLength={128}
               required
+              autoComplete="current-password"
             />
           </div>
 
