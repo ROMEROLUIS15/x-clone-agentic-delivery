@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigation } from "../context/NavigationContext";
 import { api } from "../api/client";
+import { useEventStream } from "../api/useEventStream";
 import { TweetBox } from "./TweetBox";
 import { TweetCard, Tweet } from "./TweetCard";
 
@@ -109,6 +110,23 @@ export const Thread: React.FC = () => {
       console.error("Failed to delete tweet:", err);
     }
   };
+
+  // Live updates for anyone viewing this thread: new replies appear instantly,
+  // and like counts on the focused tweet / parent / replies stay in sync.
+  useEventStream(tweetId ? `/api/tweets/${tweetId}/stream` : null, token, {
+    onReplyNew: (reply) => {
+      if (reply.parentId !== tweetId) return;
+      setReplies((prev) => (prev.some((r) => r.id === reply.id) ? prev : [...prev, reply]));
+      setTotal((prev) => prev + 1);
+      setTweet((prev) => (prev ? { ...prev, replyCount: prev.replyCount + 1 } : prev));
+    },
+    onLikeUpdate: ({ tweetId: likedId, likesCount }) => {
+      const patch = (t: Tweet) => (t.id === likedId ? { ...t, likesCount } : t);
+      setTweet((prev) => (prev ? patch(prev) : prev));
+      setParent((prev) => (prev ? patch(prev) : prev));
+      setReplies((prev) => prev.map(patch));
+    },
+  });
 
   const header = (
     <header className="main-header thread-header">

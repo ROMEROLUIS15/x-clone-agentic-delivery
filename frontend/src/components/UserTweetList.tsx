@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { api } from "../api/client";
-import { useTimelineStream } from "../api/useTimelineStream";
+import { useEventStream } from "../api/useEventStream";
 import { TweetCard, Tweet } from "./TweetCard";
 
 interface UserTweetListProps {
@@ -27,11 +27,20 @@ export const UserTweetList: React.FC<UserTweetListProps> = ({
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  // Live like-count updates while viewing this user's profile.
-  useTimelineStream(token, {
+  // Live updates while viewing this user's profile: new tweets from this user,
+  // like-count changes, and reply-count bumps — for any viewer, follower or not.
+  useEventStream(`/api/users/${userId}/stream`, token, {
+    onTweetNew: (tweet) => {
+      if (tweet.userId !== userId || tweet.parentId !== null) return;
+      setTweets((prev) => (prev.some((t) => t.id === tweet.id) ? prev : [tweet, ...prev]));
+      setTotal((prev) => prev + 1);
+    },
     onLikeUpdate: ({ tweetId, likesCount }) => {
+      setTweets((prev) => prev.map((t) => (t.id === tweetId ? { ...t, likesCount } : t)));
+    },
+    onReplyNew: (reply) => {
       setTweets((prev) =>
-        prev.map((t) => (t.id === tweetId ? { ...t, likesCount } : t))
+        prev.map((t) => (t.id === reply.parentId ? { ...t, replyCount: t.replyCount + 1 } : t))
       );
     },
   });

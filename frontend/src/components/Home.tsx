@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../api/client";
-import { useTimelineStream } from "../api/useTimelineStream";
+import { useEventStream } from "../api/useEventStream";
 import { TweetBox } from "./TweetBox";
 import { TweetCard, Tweet } from "./TweetCard";
 
@@ -17,27 +17,35 @@ const PAGE_SIZE = 10;
 export const Home: React.FC = () => {
   const { user, token } = useAuth();
   const [tweets, setTweets] = useState<Tweet[]>([]);
+  const [newTweets, setNewTweets] = useState<Tweet[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
 
-  const { newTweets, flush } = useTimelineStream(token, {
+  useEventStream("/api/tweets/timeline/stream", token, {
+    // Buffer new tweets behind a banner instead of auto-inserting (avoids scroll jumps).
+    onTweetNew: (tweet) => {
+      setNewTweets((prev) => (prev.some((t) => t.id === tweet.id) ? prev : [tweet, ...prev]));
+    },
     onLikeUpdate: ({ tweetId, likesCount }) => {
+      setTweets((prev) => prev.map((t) => (t.id === tweetId ? { ...t, likesCount } : t)));
+    },
+    onReplyNew: (reply) => {
       setTweets((prev) =>
-        prev.map((t) => (t.id === tweetId ? { ...t, likesCount } : t))
+        prev.map((t) => (t.id === reply.parentId ? { ...t, replyCount: t.replyCount + 1 } : t))
       );
     },
   });
 
   const handleShowNew = () => {
-    const incoming = flush();
-    if (incoming.length === 0) return;
+    if (newTweets.length === 0) return;
     setTweets((prev) => {
       const seen = new Set(prev.map((t) => t.id));
-      const merged = incoming.filter((t) => !seen.has(t.id));
+      const merged = newTweets.filter((t) => !seen.has(t.id));
       return [...merged, ...prev];
     });
-    setTotal((prev) => prev + incoming.length);
+    setTotal((prev) => prev + newTweets.length);
+    setNewTweets([]);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -60,6 +68,7 @@ export const Home: React.FC = () => {
     if (data) {
       setTweets(data.tweets);
       setTotal(data.total);
+      setNewTweets([]);
     }
     setLoading(false);
   }, [fetchTimeline]);

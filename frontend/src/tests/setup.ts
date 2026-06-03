@@ -1,8 +1,8 @@
 /**
  * Frontend vitest setup. jsdom does not implement EventSource, so anything
- * that imports useTimelineStream blows up at module load. We install a
- * minimal no-op stub so tests that don't care about SSE just work, while
- * tests that DO care can override it via vi.stubGlobal.
+ * that uses useEventStream blows up at module load. We install a minimal
+ * no-op stub so tests that don't care about SSE just work, while tests that
+ * DO care can override it via vi.stubGlobal.
  */
 class NoopEventSource {
   url: string;
