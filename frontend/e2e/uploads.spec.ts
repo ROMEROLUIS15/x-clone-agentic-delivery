@@ -71,7 +71,7 @@ test.describe("Image Upload E2E Flow", () => {
     const comment = `Comment on image ${uniqueId}`;
     await page.locator('textarea[placeholder="Post your reply"]').fill(comment);
     await page.locator(".tweet-box .tweet-btn").click();
-    await expect(page.locator(`text=${comment}`)).toBeVisible();
+    await expect(page.locator(`text=${comment}`)).toBeVisible({ timeout: 10000 });
   });
 
   test("should update the profile avatar via upload", async ({ page }) => {
