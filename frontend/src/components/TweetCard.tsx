@@ -6,6 +6,7 @@ export interface Tweet {
   id: string;
   text: string;
   userId: string;
+  imageUrl: string | null;
   parentId: string | null;
   createdAt: string;
   user: {
@@ -69,6 +70,9 @@ export const TweetCard: React.FC<TweetCardProps> = ({ tweet, currentUserId, onLi
         <p className="tweet-card-text" onClick={goToThread} style={{ cursor: "pointer" }}>
           {tweet.text}
         </p>
+        {tweet.imageUrl && (
+          <img className="tweet-card-image" src={tweet.imageUrl} alt="Tweet attachment" loading="lazy" />
+        )}
         <div className="tweet-card-actions">
           <button
             className="tweet-reply-btn"

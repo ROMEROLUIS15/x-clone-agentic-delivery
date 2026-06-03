@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useAuth } from "../context/AuthContext";
+import React, { useState, useEffect, useRef } from "react";
+import { useAuth, User } from "../context/AuthContext";
 import { useNavigation } from "../context/NavigationContext";
 import { api } from "../api/client";
 import { Avatar } from "./Avatar";
@@ -25,14 +25,35 @@ interface ProfileData {
 type FollowListType = "followers" | "following";
 
 export const Profile: React.FC = () => {
-  const { user: currentUser, token } = useAuth();
+  const { user: currentUser, token, updateUser } = useAuth();
   const { viewParams } = useNavigation();
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [followLoading, setFollowLoading] = useState(false);
   const [listType, setListType] = useState<FollowListType | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   const profileUserId = viewParams?.userId || currentUser?.id;
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !token) return;
+    setAvatarUploading(true);
+    try {
+      const { url } = await api.upload<{ url: string }>("/api/uploads", file, token);
+      const updated = await api.patch<User>("/api/users/me", { avatarUrl: url }, token);
+      updateUser(updated);
+      setProfile((prev) =>
+        prev ? { ...prev, user: { ...prev.user, avatarUrl: updated.avatarUrl } } : prev
+      );
+    } catch (err) {
+      console.error("Avatar update error:", err);
+    } finally {
+      setAvatarUploading(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  };
 
   useEffect(() => {
     if (!token || !profileUserId) return;
@@ -95,11 +116,34 @@ export const Profile: React.FC = () => {
       <div className="profile-header">
         <div className="profile-banner" />
         <div className="profile-avatar-section">
-          <Avatar
-            src={profile.user.avatarUrl}
-            alt={profile.user.name}
-            className="profile-large-avatar"
-          />
+          <div className="profile-avatar-wrap">
+            <Avatar
+              src={profile.user.avatarUrl}
+              alt={profile.user.name}
+              className="profile-large-avatar"
+            />
+            {isOwnProfile && (
+              <>
+                <button
+                  type="button"
+                  className="profile-avatar-edit"
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={avatarUploading}
+                  aria-label="Change avatar"
+                >
+                  {avatarUploading ? "…" : "✎"}
+                </button>
+                <input
+                  ref={avatarInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="tweet-box-file-input"
+                  onChange={handleAvatarChange}
+                  data-testid="avatar-input"
+                />
+              </>
+            )}
+          </div>
           {!isOwnProfile && (
             <button
               className={`follow-btn ${profile.isFollowing ? "following" : ""}`}
