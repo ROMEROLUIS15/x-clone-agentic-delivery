@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
 
-export type ViewType = "login" | "register" | "home" | "profile" | "search" | "thread";
+export type ViewType = "login" | "register" | "home" | "profile" | "search" | "thread" | "notifications";
 
 export interface ViewParams {
   userId?: string;

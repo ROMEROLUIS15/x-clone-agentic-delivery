@@ -1,6 +1,7 @@
 import React from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigation, ViewType } from "../context/NavigationContext";
+import { useNotifications } from "../context/NotificationContext";
 import { Avatar } from "./Avatar";
 
 interface LayoutProps {
@@ -10,6 +11,7 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { user, logout } = useAuth();
   const { currentView, navigateTo } = useNavigation();
+  const { unreadCount } = useNotifications();
 
   if (!user) return <>{children}</>;
 
@@ -21,6 +23,10 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     {
       view: "search", label: "Search",
       icon: <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M10.25 3.75c-3.59 0-6.5 2.91-6.5 6.5s2.91 6.5 6.5 6.5c1.795 0 3.419-.726 4.596-1.904 1.178-1.177 1.904-2.801 1.904-4.596 0-3.59-2.91-6.5-6.5-6.5zm-8.5 6.5c0-4.694 3.806-8.5 8.5-8.5s8.5 3.806 8.5 8.5c0 1.986-.682 3.815-1.824 5.262l4.781 4.781-1.414 1.414-4.781-4.781c-1.447 1.142-3.276 1.824-5.262 1.824-4.694 0-8.5-3.806-8.5-8.5z"/></svg>
+    },
+    {
+      view: "notifications", label: "Notifications",
+      icon: <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M19.993 9.042C19.48 5.017 16.054 2 11.996 2s-7.49 3.021-7.999 7.051L2.866 18H7.1c.463 2.282 2.481 4 4.9 4s4.437-1.718 4.9-4h4.236l-1.143-8.958zM12 20c-1.296 0-2.388-.835-2.794-2h5.588c-.406 1.165-1.498 2-2.794 2zm-6.853-4l.847-6.698C6.364 6.272 8.941 4 11.996 4s5.628 2.268 6.002 5.295L18.845 16H5.147z"/></svg>
     },
     {
       view: "profile", label: "Profile",
@@ -49,7 +55,14 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
                   : navigateTo(item.view)
               }
             >
-              <span className="nav-icon">{item.icon}</span>
+              <span className="nav-icon">
+                {item.icon}
+                {item.view === "notifications" && unreadCount > 0 && (
+                  <span className="nav-badge" aria-label={`${unreadCount} unread notifications`}>
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </span>
               <span className="nav-text">{item.label}</span>
             </div>
           ))}

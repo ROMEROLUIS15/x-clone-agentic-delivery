@@ -6,6 +6,15 @@ export interface LikeUpdate {
   likesCount: number;
 }
 
+export interface NotificationItem {
+  id: string;
+  type: "like" | "follow" | "reply";
+  read: boolean;
+  createdAt: string;
+  actor: { id: string; username: string; name: string; avatarUrl: string | null };
+  tweet: { id: string; text: string } | null;
+}
+
 export interface EventStreamHandlers {
   /** A new top-level tweet was created (timeline / profile streams). */
   onTweetNew?: (tweet: Tweet) => void;
@@ -13,6 +22,8 @@ export interface EventStreamHandlers {
   onReplyNew?: (reply: Tweet) => void;
   /** A tweet's like count changed. */
   onLikeUpdate?: (update: LikeUpdate) => void;
+  /** A notification was pushed to the current user (user topic). */
+  onNotification?: (notification: NotificationItem) => void;
 }
 
 /**
@@ -56,6 +67,10 @@ export function useEventStream(
     source.addEventListener("like:updated", (e) => {
       const u = parse<LikeUpdate>(e);
       if (u) handlersRef.current.onLikeUpdate?.(u);
+    });
+    source.addEventListener("notification:new", (e) => {
+      const n = parse<NotificationItem>(e);
+      if (n) handlersRef.current.onNotification?.(n);
     });
 
     source.onerror = () => {

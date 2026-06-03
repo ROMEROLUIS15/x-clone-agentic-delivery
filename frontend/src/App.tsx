@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { NavigationProvider, useNavigation } from "./context/NavigationContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import { Login } from "./components/Login";
 import { Register } from "./components/Register";
 import { Layout } from "./components/Layout";
@@ -8,6 +9,7 @@ import { Home } from "./components/Home";
 import { Profile } from "./components/Profile";
 import { Search } from "./components/Search";
 import { Thread } from "./components/Thread";
+import { Notifications } from "./components/Notifications";
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
@@ -80,6 +82,8 @@ const AppContent: React.FC = () => {
         return <Search />;
       case "thread":
         return <Thread />;
+      case "notifications":
+        return <Notifications />;
       default:
         return <Home />;
     }
@@ -92,7 +96,9 @@ function App() {
   return (
     <AuthProvider>
       <NavigationProvider>
-        <AppContent />
+        <NotificationProvider>
+          <AppContent />
+        </NotificationProvider>
       </NavigationProvider>
     </AuthProvider>
   );

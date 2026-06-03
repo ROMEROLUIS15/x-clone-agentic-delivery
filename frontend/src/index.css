@@ -872,6 +872,75 @@ button, input, textarea {
   cursor: not-allowed;
 }
 
+/* Notifications */
+.nav-icon {
+  position: relative;
+}
+
+.nav-badge {
+  position: absolute;
+  top: -6px;
+  left: 12px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9999px;
+  background-color: #1d9bf0;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.notification-item {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.notification-item.unread {
+  background-color: rgba(29, 155, 240, 0.08);
+}
+
+@media (hover: hover) {
+  .notification-item:hover {
+    background-color: rgba(231, 233, 234, 0.03);
+  }
+}
+
+.notification-avatar img {
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+}
+
+.notification-text {
+  font-size: 15px;
+}
+
+.notification-actor {
+  font-weight: 700;
+}
+
+.notification-action {
+  color: var(--text-secondary);
+}
+
+.notification-preview {
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
 /* Profile Page */
 .profile-header {
   border-bottom: 1px solid var(--border-color);
