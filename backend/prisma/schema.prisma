@@ -29,11 +29,15 @@ model Tweet {
   id        String   @id @default(uuid())
   userId    String   @map("user_id")
   text      String
+  parentId  String?  @map("parent_id")
   createdAt DateTime @default(now()) @map("created_at")
 
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  likes Like[]
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent  Tweet?  @relation("TweetReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Tweet[] @relation("TweetReplies")
+  likes   Like[]
 
+  @@index([parentId])
   @@map("tweets")
 }
 
