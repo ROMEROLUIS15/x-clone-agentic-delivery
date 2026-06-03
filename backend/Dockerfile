@@ -1,11 +1,15 @@
 FROM node:24-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
-COPY prisma/schema.postgres.prisma ./prisma/schema.prisma
 COPY prisma/ ./prisma/
-COPY . .
-RUN npx prisma generate
+# This image targets PostgreSQL: use the Postgres schema (overwrite the dev
+# SQLite one) BEFORE install so the postinstall `prisma generate` produces a
+# Postgres client. Copied surgically (no `COPY . .`) so the SQLite schema is
+# never reintroduced.
+RUN cp prisma/schema.postgres.prisma prisma/schema.prisma
+RUN npm ci
+COPY tsconfig.json ./
+COPY src ./src
 RUN npm run build
 
 FROM node:24-alpine AS runner
