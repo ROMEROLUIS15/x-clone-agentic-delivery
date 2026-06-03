@@ -15,7 +15,7 @@ function parsePagination(req: AuthenticatedRequest) {
 }
 
 export async function createTweet(req: AuthenticatedRequest, res: Response): Promise<void> {
-  const tweet = await tweetService.createTweet(req.user.id, req.body.text);
+  const tweet = await tweetService.createTweet(req.user.id, req.body.text, req.body.imageUrl);
   res.status(201).json(tweet);
 }
 
@@ -39,7 +39,7 @@ export async function getTweet(req: AuthenticatedRequest, res: Response): Promis
 }
 
 export async function createReply(req: AuthenticatedRequest, res: Response): Promise<void> {
-  const reply = await tweetService.createReply(req.user.id, String(req.params.id), req.body.text);
+  const reply = await tweetService.createReply(req.user.id, String(req.params.id), req.body.text, req.body.imageUrl);
   res.status(201).json(reply);
 }
 

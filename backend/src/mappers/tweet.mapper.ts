@@ -2,6 +2,7 @@ export interface TweetWithRelations {
   id: string;
   text: string;
   userId: string;
+  imageUrl: string | null;
   parentId: string | null;
   createdAt: Date;
   user: {
@@ -19,6 +20,7 @@ export function toTweetDTO(tweet: TweetWithRelations) {
     id: tweet.id,
     text: tweet.text,
     userId: tweet.userId,
+    imageUrl: tweet.imageUrl,
     parentId: tweet.parentId,
     createdAt: tweet.createdAt,
     user: tweet.user,

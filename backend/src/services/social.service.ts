@@ -111,6 +111,26 @@ export async function searchUsersByQuery(q: string) {
   });
 }
 
+export async function updateMyProfile(
+  userId: string,
+  data: { name?: string; bio?: string; avatarUrl?: string }
+) {
+  // Prisma ignores `undefined` fields, so only provided keys are updated.
+  return prisma.user.update({
+    where: { id: userId },
+    data,
+    select: {
+      id: true,
+      email: true,
+      username: true,
+      name: true,
+      bio: true,
+      avatarUrl: true,
+      createdAt: true,
+    },
+  });
+}
+
 export async function getUserProfile(targetUserId: string, currentUserId: string | undefined) {
   const isOwnProfile = currentUserId === targetUserId;
 

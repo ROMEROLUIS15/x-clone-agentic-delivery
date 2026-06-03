@@ -8,14 +8,18 @@ import {
   unlike,
   getUser,
   searchUsers,
+  updateMe,
 } from "../controllers/social.controller";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import { mutationLimiter } from "../middlewares/rateLimit.middleware";
+import { validate } from "../middlewares/validate.middleware";
+import { updateProfileSchema } from "../schemas/user.schema";
 import { getUserTweets } from "../controllers/tweet.controller";
 import { requireAuth } from "../types/auth";
 
 const router = Router();
 
+router.patch("/users/me", authMiddleware, mutationLimiter, validate(updateProfileSchema), requireAuth(updateMe));
 router.get("/users/search", authMiddleware, searchUsers);
 router.get("/users/:id", authMiddleware, getUser);
 router.get("/users/:id/tweets", authMiddleware, requireAuth(getUserTweets));

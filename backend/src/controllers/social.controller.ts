@@ -42,3 +42,8 @@ export async function getUser(req: Request, res: Response): Promise<void> {
   const profile = await social.getUserProfile(String(req.params.id), req.user?.id);
   res.status(200).json(profile);
 }
+
+export async function updateMe(req: AuthenticatedRequest, res: Response): Promise<void> {
+  const user = await social.updateMyProfile(req.user.id, req.body);
+  res.status(200).json(user);
+}

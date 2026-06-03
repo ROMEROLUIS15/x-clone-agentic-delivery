@@ -10,7 +10,7 @@ export interface Pagination {
   offset: number;
 }
 
-export async function createTweet(userId: string, text: string) {
+export async function createTweet(userId: string, text: string, imageUrl?: string) {
   const trimmed = text.trim();
   if (trimmed.length === 0) {
     throw new HttpError(400, "Tweet text is required");
@@ -20,7 +20,7 @@ export async function createTweet(userId: string, text: string) {
   }
 
   const tweet = await prisma.tweet.create({
-    data: { userId, text: trimmed },
+    data: { userId, text: trimmed, imageUrl: imageUrl ?? null },
     include: tweetIncludeFor(userId),
   });
 
@@ -33,7 +33,7 @@ export async function createTweet(userId: string, text: string) {
   return dto;
 }
 
-export async function createReply(userId: string, parentId: string, text: string) {
+export async function createReply(userId: string, parentId: string, text: string, imageUrl?: string) {
   const trimmed = text.trim();
   if (trimmed.length === 0) {
     throw new HttpError(400, "Tweet text is required");
@@ -49,7 +49,7 @@ export async function createReply(userId: string, parentId: string, text: string
   if (!parent) throw new HttpError(404, "Tweet not found");
 
   const reply = await prisma.tweet.create({
-    data: { userId, text: trimmed, parentId },
+    data: { userId, text: trimmed, parentId, imageUrl: imageUrl ?? null },
     include: tweetIncludeFor(userId),
   });
 
