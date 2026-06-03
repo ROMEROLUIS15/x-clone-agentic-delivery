@@ -2,6 +2,7 @@ import prisma from "../db";
 import { HttpError } from "../middlewares/error.middleware";
 import { toTweetDTO, tweetIncludeFor } from "../mappers/tweet.mapper";
 import { publishNewTweet, publishNewReply } from "./realtime.service";
+import { createNotification } from "./notification.service";
 
 export const TWEET_MAX_CHARS = 280;
 
@@ -57,6 +58,10 @@ export async function createReply(userId: string, parentId: string, text: string
   // Fire-and-forget: live-append to the open thread and bump reply counts.
   void publishNewReply(dto, parent.id, parent.userId, parent.parentId).catch((err) => {
     console.error("publishNewReply failed:", err);
+  });
+  // Notify the parent tweet's author (links back to that thread).
+  void createNotification({ recipientId: parent.userId, actorId: userId, type: "reply", tweetId: parent.id }).catch((err) => {
+    console.error("reply notification failed:", err);
   });
 
   return dto;

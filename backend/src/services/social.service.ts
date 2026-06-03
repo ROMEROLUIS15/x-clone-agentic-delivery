@@ -1,6 +1,7 @@
 import prisma from "../db";
 import { HttpError } from "../middlewares/error.middleware";
 import { publishLikeUpdate } from "./realtime.service";
+import { createNotification } from "./notification.service";
 
 const publicUserSelect = {
   id: true,
@@ -26,6 +27,10 @@ export async function followUser(currentUserId: string, targetUserId: string) {
     where: { followerId_followingId: { followerId: currentUserId, followingId: targetUserId } },
     update: {},
     create: { followerId: currentUserId, followingId: targetUserId },
+  });
+
+  void createNotification({ recipientId: targetUserId, actorId: currentUserId, type: "follow" }).catch((err) => {
+    console.error("follow notification failed:", err);
   });
 
   const followersCount = await prisma.follow.count({ where: { followingId: targetUserId } });
@@ -79,6 +84,9 @@ export async function likeTweet(userId: string, tweetId: string) {
   const likesCount = await prisma.like.count({ where: { tweetId } });
   void publishLikeUpdate(tweetId, tweet.userId, likesCount, tweet.parentId).catch((err) => {
     console.error("publishLikeUpdate failed:", err);
+  });
+  void createNotification({ recipientId: tweet.userId, actorId: userId, type: "like", tweetId }).catch((err) => {
+    console.error("like notification failed:", err);
   });
 
   return { likesCount, liked: true };

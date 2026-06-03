@@ -18,6 +18,7 @@ export type SseEvent =
   | "tweet:new"
   | "reply:new"
   | "like:updated"
+  | "notification:new"
   | "connected";
 
 export interface Subscriber {
@@ -128,6 +129,14 @@ export async function publishLikeUpdate(
   ]);
   if (parentId) targets.add(topics.thread(parentId));
   publishToTopics(targets, "like:updated", payload);
+}
+
+/**
+ * Push a notification to its recipient's personal topic. They receive it live
+ * wherever they are in the app (the badge subscribes to this topic globally).
+ */
+export function publishNotification(recipientId: string, notification: unknown): void {
+  publish(topics.user(recipientId), "notification:new", notification);
 }
 
 /**
