@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
+  await prisma.notification.deleteMany();
   await prisma.like.deleteMany();
   await prisma.follow.deleteMany();
   await prisma.tweet.deleteMany();
@@ -161,12 +162,35 @@ async function main() {
     replies.push(reply);
   }
 
+  // Demo notifications for user1 (Carlos) so the bell shows activity on login.
+  // tweets[0..2] are Carlos's tweets. Each entry: [actorIdx, type, tweetIdx|null, read].
+  const notificationsData: [number, "like" | "follow" | "reply", number | null, boolean][] = [
+    [1, "like", 0, false],
+    [3, "like", 0, false],
+    [4, "follow", null, false],
+    [2, "reply", 2, false],
+    [5, "follow", null, true],
+    [6, "like", 1, true],
+  ];
+  for (const [actorIdx, type, tweetIdx, read] of notificationsData) {
+    await prisma.notification.create({
+      data: {
+        recipientId: users[0].id,
+        actorId: users[actorIdx].id,
+        type,
+        tweetId: tweetIdx === null ? null : tweets[tweetIdx].id,
+        read,
+      },
+    });
+  }
+
   console.log("Database seeded successfully!");
   console.log(`  - ${users.length} users created`);
   console.log(`  - ${tweets.length} tweets created`);
   console.log(`  - ${replies.length} replies created`);
   console.log(`  - ${followPairs.length} follows created`);
   console.log(`  - ${likePairs.length} likes created`);
+  console.log(`  - ${notificationsData.length} notifications created (for user1)`);
   console.log("\nTest credentials:");
   console.log("  Email: user1@example.com");
   console.log("  Password: password123");
