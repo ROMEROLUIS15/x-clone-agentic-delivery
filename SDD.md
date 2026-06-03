@@ -322,3 +322,39 @@ Before submission, verify the following are fully compliant:
 - [x] Repository has progressive, un-squashed commits detailing the complete
       build history?
       → 40+ commits across 8 phases, each with descriptive messages. No squashed commits.
+
+---
+
+## 8. Post-Challenge Feature Roadmap
+
+After the core challenge was delivered, the project continues toward a fuller,
+production-grade product. Each phase below follows the same discipline as the
+original build: **all three test layers** (backend integration, frontend
+component, Playwright E2E), **immediate documentation**, **atomic semantic
+commits**, and **maximum reuse** of existing models/services/components.
+
+The challenge's official bonus list (Section 6, Phase 7) had four options;
+three were delivered originally (Docker, SSE real-time) and one in this roadmap.
+
+### Phase 9: Threaded Replies ✅ (DONE)
+
+- Reply modelled as a `Tweet` with a self-relation `parentId` (`onDelete: Cascade`,
+  indexed) — reuses the existing tweet entity, DTO mapper, and 280-char schema.
+- Endpoints: `GET /api/tweets/:id` (tweet + parent context),
+  `GET /api/tweets/:id/replies` (paginated), `POST /api/tweets/:id/replies`.
+- Home timeline and profile show top-level tweets only (`parentId: null`).
+- Frontend: dedicated `Thread` view, reply composer (generalized `TweetBox`),
+  reply affordance with live count on every card.
+- Tests: 14 backend (`replies.test.ts`) + 4 frontend (`thread.test.tsx`) +
+  1 E2E (`replies.spec.ts`). Suite totals: **111 backend / 46 frontend / 5 E2E**.
+
+### Planned phases
+
+- **Phase 10 — Image Upload** (avatars + tweet images): completes the 4th and
+  final official bonus. Adds file handling/storage; pairs with profile editing.
+- **Phase 11 — Real-time Notifications**: reuses the SSE bus to aggregate
+  like / follow / reply events into a notification center with unread badge.
+- **Phase 12 — Retweets & Quote Tweets**: completes the amplification model with
+  attributed timeline merging.
+- **Phase 13 — Polish**: bookmarks, hashtags + trends, profile edit, dark-mode
+  toggle.
