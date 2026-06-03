@@ -33,6 +33,25 @@ export async function getUserTweets(req: AuthenticatedRequest, res: Response): P
   res.status(200).json(result);
 }
 
+export async function getTweet(req: AuthenticatedRequest, res: Response): Promise<void> {
+  const result = await tweetService.getTweetWithContext(String(req.params.id), req.user.id);
+  res.status(200).json(result);
+}
+
+export async function createReply(req: AuthenticatedRequest, res: Response): Promise<void> {
+  const reply = await tweetService.createReply(req.user.id, String(req.params.id), req.body.text);
+  res.status(201).json(reply);
+}
+
+export async function getReplies(req: AuthenticatedRequest, res: Response): Promise<void> {
+  const result = await tweetService.getRepliesFor(
+    String(req.params.id),
+    req.user.id,
+    parsePagination(req)
+  );
+  res.status(200).json(result);
+}
+
 export async function deleteTweet(req: AuthenticatedRequest, res: Response): Promise<void> {
   await tweetService.deleteOwnedTweet(String(req.params.id), req.user.id);
   res.status(200).json({ message: "Tweet deleted successfully" });
