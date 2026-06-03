@@ -132,9 +132,39 @@ async function main() {
     )
   );
 
+  // Replies (threaded conversations). Each entry: [authorIdx, parentTweetIdx, text].
+  // Created sequentially so timestamps reflect a natural conversation order.
+  const repliesData: [number, number, string][] = [
+    [1, 0, "This is gold. Did you go with an event-driven approach or sync calls between services?"],
+    [0, 0, "@marialopez mostly event-driven with a message queue. Sync only where strong consistency was a must."],
+    [8, 0, "The painful refactors are always the ones worth doing. Congrats on shipping it!"],
+    [2, 2, "Tabs supremacy! Finally someone with good taste. 🙌"],
+    [3, 2, "Hard disagree but I respect the confidence. 😄"],
+    [11, 4, "Container queries changed my whole approach to component-driven design. Welcome to the club!"],
+    [5, 7, "The borrow checker fights you until the day it suddenly clicks. Then you miss it everywhere else."],
+    [2, 7, "@jameswilson exactly this. I write better C++ now just from thinking in Rust terms."],
+    [9, 24, "30ms is a thing of beauty. Was it an index, or did you rewrite the query plan?"],
+    [8, 24, "@robertosilva a composite index plus killing an accidental N+1. Classic combo."],
+    [3, 10, "Congrats! What dataset were you benchmarking against?"],
+    [10, 30, "60% cost reduction is huge. How did the cold starts affect your latency budget?"],
+  ];
+
+  const replies = [];
+  for (const [authorIdx, parentIdx, text] of repliesData) {
+    const reply = await prisma.tweet.create({
+      data: {
+        userId: users[authorIdx].id,
+        text,
+        parentId: tweets[parentIdx].id,
+      },
+    });
+    replies.push(reply);
+  }
+
   console.log("Database seeded successfully!");
   console.log(`  - ${users.length} users created`);
   console.log(`  - ${tweets.length} tweets created`);
+  console.log(`  - ${replies.length} replies created`);
   console.log(`  - ${followPairs.length} follows created`);
   console.log(`  - ${likePairs.length} likes created`);
   console.log("\nTest credentials:");
