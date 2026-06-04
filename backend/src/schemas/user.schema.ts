@@ -10,5 +10,3 @@ export const updateProfileSchema = z
   .refine((data) => Object.keys(data).length > 0, {
     message: "Provide at least one field to update",
   });
-
-export type UpdateProfilePayload = z.infer<typeof updateProfileSchema>;

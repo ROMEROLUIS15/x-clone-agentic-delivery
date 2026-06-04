@@ -1,8 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import prisma from "../db";
-import { JWT_SECRET } from "../config";
-import type { TokenPayload } from "./auth.middleware";
+import { resolveUserFromToken } from "./auth.middleware";
 
 /**
  * Auth middleware variant for Server-Sent Events.
@@ -35,16 +32,7 @@ export async function sseAuthMiddleware(
       return;
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] }) as TokenPayload;
-
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: {
-        id: true, email: true, username: true, name: true,
-        bio: true, avatarUrl: true, createdAt: true,
-      },
-    });
-
+    const user = await resolveUserFromToken(token);
     if (!user) {
       res.status(401).json({ error: "Unauthorized: User not found" });
       return;

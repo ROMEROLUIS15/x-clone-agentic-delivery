@@ -7,6 +7,31 @@ export interface TokenPayload {
   userId: string;
 }
 
+/** Fields returned for the authenticated user — never includes the password hash. */
+export const SAFE_USER_SELECT = {
+  id: true,
+  email: true,
+  username: true,
+  name: true,
+  bio: true,
+  avatarUrl: true,
+  createdAt: true,
+} as const;
+
+/**
+ * Verifies a JWT (HS256, pinned) and loads the corresponding user from the DB,
+ * so a token for a deleted user is rejected even if still cryptographically
+ * valid. Returns null if the user no longer exists; throws on an invalid token.
+ * Shared by the header-based and SSE (query-param) auth middlewares.
+ */
+export async function resolveUserFromToken(token: string) {
+  const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] }) as TokenPayload;
+  return prisma.user.findUnique({
+    where: { id: decoded.userId },
+    select: SAFE_USER_SELECT,
+  });
+}
+
 export async function authMiddleware(
   req: Request,
   res: Response,
@@ -19,22 +44,7 @@ export async function authMiddleware(
       return;
     }
 
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ["HS256"] }) as TokenPayload;
-
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        name: true,
-        bio: true,
-        avatarUrl: true,
-        createdAt: true,
-      },
-    });
-
+    const user = await resolveUserFromToken(authHeader.split(" ")[1]);
     if (!user) {
       res.status(401).json({ error: "Unauthorized: User not found" });
       return;

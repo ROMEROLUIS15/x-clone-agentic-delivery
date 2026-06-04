@@ -1,18 +1,7 @@
 import { Response } from "express";
 import type { AuthenticatedRequest } from "../types/auth";
 import * as notificationService from "../services/notification.service";
-
-const MAX_LIMIT = 100;
-const DEFAULT_LIMIT = 20;
-
-function parsePagination(req: AuthenticatedRequest) {
-  const limit = Math.min(
-    Math.max(parseInt(req.query.limit as string) || DEFAULT_LIMIT, 1),
-    MAX_LIMIT
-  );
-  const offset = Math.max(parseInt(req.query.offset as string) || 0, 0);
-  return { limit, offset };
-}
+import { parsePagination } from "../utils/pagination";
 
 export async function getNotifications(req: AuthenticatedRequest, res: Response): Promise<void> {
   const result = await notificationService.listNotifications(req.user.id, parsePagination(req));
