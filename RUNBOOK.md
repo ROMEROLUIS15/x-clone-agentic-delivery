@@ -119,9 +119,12 @@ npm test
 
 ### E2E tests (Playwright — 10 tests across 8 specs)
 
-Self-contained: Playwright boots both the backend (with `NODE_ENV=test`, which
-relaxes the auth rate limiter) and the frontend automatically, so no servers
-need to be started manually. The dev database must already be migrated/seeded.
+Self-contained and isolated: Playwright boots both the backend (with
+`NODE_ENV=test`, which relaxes the auth rate limiter) and the frontend
+automatically, so no servers need to be started manually. A **dedicated,
+throwaway `e2e.db`** is provisioned in `globalSetup` and deleted in
+`globalTeardown`, so the E2E run never touches — or leaves residue in — the dev
+database.
 
 ```bash
 cd frontend
