@@ -142,10 +142,18 @@ The Docker Compose stack uses PostgreSQL instead of SQLite and serves the fronte
 > (its status must read "running") — this is the most common reason the command
 > below appears to hang or fail.
 
+Run the command **from the repository root** — the folder that contains
+`docker-compose.yml` (not `backend/` or `frontend/`):
+
 ```bash
-# From project root
+cd x-clone-agentic-delivery   # the repo root, where docker-compose.yml lives
 docker compose up --build
 ```
+
+> If a local PostgreSQL is already using port 5432 (common on a dev machine),
+> the command fails with *"port 5432 already allocated"*. Stop that service or
+> add a `docker-compose.override.yml` (see Troubleshooting) — a recruiter on a
+> clean machine won't hit this.
 
 > The **first build takes a few minutes** (it pulls base images, runs `npm ci`,
 > and builds both the backend and the frontend). It's ready when the logs show

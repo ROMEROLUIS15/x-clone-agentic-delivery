@@ -43,6 +43,10 @@ desktop.ini
 uploads/
 uploads-test/
 
+# Local Docker Compose overrides (e.g. remapping ports for local conflicts)
+docker-compose.override.yml
+docker-compose.override.yaml
+
 # SQLite database files and locks
 *.db
 *.db-journal
