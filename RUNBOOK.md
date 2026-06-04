@@ -158,21 +158,30 @@ docker compose up --build
 > The **first build takes a few minutes** (it pulls base images, runs `npm ci`,
 > and builds both the backend and the frontend). It's ready when the logs show
 > `Database seeded successfully!` followed by `Server running on http://localhost:4000`.
+> (That `4000` line is the **backend's own** startup message — it is **not** the
+> URL you open in the browser. See the next step.)
 
 This starts three services:
 
-| Service | Container | Port |
-|---------|-----------|------|
-| PostgreSQL 16 | `xclone-db` | 5432 |
-| Backend (Node.js) | `xclone-backend` | 4000 |
-| Frontend (nginx) | `xclone-frontend` | 5173 |
+| Service | Container | Port | Open in browser? |
+|---------|-----------|------|------------------|
+| Frontend (nginx) | `xclone-frontend` | **5173** | ✅ **Yes — this is the app** |
+| Backend (Node.js API) | `xclone-backend` | 4000 | ❌ No — internal API, no UI |
+| PostgreSQL 16 | `xclone-db` | 5432 | ❌ No — database |
 
 On first start, the backend automatically:
 1. Pushes the Prisma schema to PostgreSQL (`prisma db push`)
 2. Seeds the database with realistic data
 3. Starts the Express server
 
-Visit **http://localhost:5173** and log in with `user1@example.com` / `password123`.
+### 👉 Open the app
+
+Once you see the "ready" logs above, open **http://localhost:5173** in your
+browser and log in with `user1@example.com` / `password123`.
+
+The frontend (`:5173`) serves the UI and forwards every `/api/*` call to the
+backend (`:4000`) for you — so **`http://localhost:5173` is the only URL you
+need to open**. There is no web page at `:4000`; it only answers API requests.
 
 > **Secrets in Docker.** For a quick evaluator run the stack boots with built-in
 > defaults (and logs a loud warning that `JWT_SECRET` is a known-weak default).
