@@ -76,6 +76,12 @@ npm run dev
 
 The frontend dev server proxies `/api/*` requests to `http://localhost:4000` (configured in `vite.config.ts`).
 
+### 5. Open the app
+
+With both servers running, open **http://localhost:5173** in your browser and log
+in with `user1@example.com` / `password123` (after seeding). That `:5173` frontend
+is the app; the backend on `:4000` only answers API calls — you never open it directly.
+
 ---
 
 ## Seed Data

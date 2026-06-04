@@ -16,7 +16,7 @@ A full-stack Twitter/X clone built with TypeScript, featuring custom authenticat
 | **Styling** | Vanilla CSS (mobile-first) | Zero-dependency approach to custom dark theme, radial gradients, micro-animations (likePop, fadeIn), and three-breakpoint responsive layout. |
 | **Auth** | Custom (bcryptjs + jsonwebtoken) | Mandated by challenge constraints. No external auth services. Passwords hashed with bcrypt (salt rounds: 10), sessions via JWT Bearer tokens (7-day expiry). |
 | **Testing (unit/integration)** | Vitest + Supertest | Blazing-fast native ESM test runner. Supertest provides HTTP assertions without spinning up a full server. |
-| **Testing (E2E)** | Playwright | Industry-standard browser automation; covers auth, tweet creation, follow/like flows. |
+| **Testing (E2E)** | Playwright | Industry-standard browser automation; covers auth, tweets, social, timeline/search, replies, image upload, cross-user real-time, and notifications. Runs against a dedicated throwaway DB. |
 | **Containerization** | Docker Compose | Single-command production stack with PostgreSQL 16, backend, and nginx-served frontend. |
 | **Real-time** | Server-Sent Events (native) | One-directional push (server→client) for new tweets, replies and likes across timeline, profiles and threads (topic-based). Simpler than WebSocket, plain HTTP, browser-native reconnection. No new dependencies. |
 
@@ -301,6 +301,17 @@ Some decisions were kept off the AI's plate on purpose:
 
 Concretely: Gemini caught planning gaps that the implementer would have papered over; DeepSeek shipped consistent code fast against a vetted plan; Claude was used last because its strength is large-context architectural review and atomic multi-file refactors. Using a single model for all three roles tends to produce confirmation bias (the planner approves what the implementer already wants to write). Splitting roles forces an adversarial check at every step.
 
+### Post-challenge evolution
+
+After the core challenge was delivered, the project continued through four more phases — **threaded replies**, **image upload**, a **topic-based real-time overhaul**, and a **notification center** — followed by a final **architecture audit and Docker-stack hardening**. This work was driven with **Claude Code (Opus 4.8)** in an interactive, discipline-first loop applied to every change:
+
+- **All three test layers on every feature** — backend integration (Vitest + Supertest), frontend component (Testing Library), and Playwright E2E — written and green before a feature was considered done.
+- **Documentation in lockstep** — README / SDD / RUNBOOK updated with each feature, never deferred.
+- **Atomic, semantic commits**, reviewed before every push; no squashing.
+- **Verification over assumption** — running the full stack surfaced (and fixed) real issues a green unit suite would miss: the nginx `trust proxy` setting behind Docker, the Dockerfile build order, and isolating the E2E run to a throwaway database so it never touches dev data.
+
+**Current suite: 138 backend · 54 frontend · 10 E2E — all green, ≥95% backend coverage.** The full Docker stack is verified booting against PostgreSQL.
+
 ---
 
 ## Project Structure
@@ -310,7 +321,7 @@ Concretely: Gemini caught planning gaps that the implementer would have papered 
 │   ├── prisma/
 │   │   ├── schema.prisma          # SQLite schema (local dev)
 │   │   ├── schema.postgres.prisma # PostgreSQL schema (Docker)
-│   │   └── seed.ts                # Seed script (12 users, 36 tweets)
+│   │   └── seed.ts                # Seed script (12 users, 36 tweets, 12 replies, 49 follows, 72 likes, 6 notifications)
 │   ├── src/
 │   │   ├── controllers/           # Thin HTTP adapters (3-5 lines each)
 │   │   ├── services/              # Business logic (auth/tweet/social)
@@ -327,7 +338,7 @@ Concretely: Gemini caught planning gaps that the implementer would have papered 
 │   ├── Dockerfile
 │   └── package.json
 ├── frontend/
-│   ├── e2e/                       # Playwright E2E tests (5 specs)
+│   ├── e2e/                       # Playwright E2E tests (8 specs, 10 tests)
 │   ├── src/
 │   │   ├── api/                   # Central apiClient (Bearer injection, 401 auto-logout)
 │   │   ├── components/            # React components (Avatar, TweetCard reused across views)
