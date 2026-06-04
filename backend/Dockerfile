@@ -8,7 +8,9 @@ COPY prisma/ ./prisma/
 # never reintroduced.
 RUN cp prisma/schema.postgres.prisma prisma/schema.prisma
 RUN npm ci
-COPY tsconfig.json ./
+# tsconfig.typecheck.json is needed because `npm run build` also type-checks
+# prisma/seed.ts (which is already present from the COPY prisma/ above).
+COPY tsconfig.json tsconfig.typecheck.json ./
 COPY src ./src
 RUN npm run build
 
