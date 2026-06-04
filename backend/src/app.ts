@@ -14,6 +14,12 @@ dotenv.config();
 
 const app = express();
 
+// Behind the nginx reverse proxy (Docker), trust exactly one proxy hop so
+// req.ip reflects the real client (from X-Forwarded-For) and express-rate-limit
+// keys per real user instead of bucketing everyone under the proxy's IP.
+// `1` (not `true`) keeps it non-permissive — clients can't spoof their IP.
+app.set("trust proxy", 1);
+
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(cors());
 app.use(express.json({ limit: "10kb" }));
