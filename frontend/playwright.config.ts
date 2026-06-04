@@ -7,6 +7,9 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: "html",
+  // Provision/clean a dedicated SQLite DB so E2E never touches dev.db.
+  globalSetup: "./e2e/global-setup.ts",
+  globalTeardown: "./e2e/global-teardown.ts",
   use: {
     baseURL: "http://localhost:5173",
     trace: "on-first-retry",
@@ -26,7 +29,9 @@ export default defineConfig({
       cwd: "../backend",
       url: "http://localhost:4000/api/health",
       reuseExistingServer: !process.env.CI,
-      env: { NODE_ENV: "test" },
+      // NODE_ENV=test relaxes the auth rate limiter; the dedicated e2e.db
+      // (provisioned in global-setup) keeps E2E data out of dev.db.
+      env: { NODE_ENV: "test", DATABASE_URL: "file:./e2e.db" },
       timeout: 120000,
     },
     {
