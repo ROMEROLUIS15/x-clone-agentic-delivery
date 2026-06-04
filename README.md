@@ -11,7 +11,7 @@ A full-stack Twitter/X clone built with TypeScript, featuring custom authenticat
 | **Runtime** | Node.js 24 | LTS, native ESM, excellent agentic tooling compatibility (tsx, vitest). |
 | **Language** | TypeScript (strict) | End-to-end type safety across backend and frontend; reduces context-switching for AI agents. |
 | **Backend framework** | Express.js 5 | Minimal, widely understood routing layer; no magic — easy for an agent to reason about request/response flow. |
-| **ORM** | Prisma 6 | Declarative schema → type-safe client generation; ideal for rapid schema evolution and migrations. Supports SQLite (dev) and PostgreSQL (Docker). |
+| **ORM** | Prisma 6 | Chosen over Sequelize (my usual ORM) for a fully **type-safe generated client**, a declarative schema with first-class migrations, and a single client that targets both SQLite (local dev) and PostgreSQL (Docker). |
 | **Frontend** | React 19 + Vite 6 | Component model maps naturally to UI state; Vite provides instant HMR and first-class TypeScript/JSX support. |
 | **Styling** | Vanilla CSS (mobile-first) | Zero-dependency approach to custom dark theme, radial gradients, micro-animations (likePop, fadeIn), and three-breakpoint responsive layout. |
 | **Auth** | Custom (bcryptjs + jsonwebtoken) | Mandated by challenge constraints. No external auth services. Passwords hashed with bcrypt (salt rounds: 10), sessions via JWT Bearer tokens (7-day expiry). |
@@ -291,7 +291,7 @@ Instead of free-form prompts, a structured **Software Design Document** ([`SDD.m
 
 Some decisions were kept off the AI's plate on purpose:
 
-- **Stack choice and justification** (Node/Express/Prisma/React + Vite/SQLite-Postgres).
+- **Stack evaluation and the final call** (Node/Express/Prisma/React + Vite/SQLite-Postgres) — e.g. weighing Prisma against Sequelize and owning the trade-off.
 - **Database modeling** — composite uniqueness on `(followerId, followingId)` and `(userId, tweetId)`, the timeline query strategy (`IN` over followed-ids), and the dual `schema.prisma` / `schema.postgres.prisma` approach.
 - **Security posture** — bcrypt salt rounds, JWT expiry, the decision to fail-fast on `JWT_SECRET` in production, and the choice of `localStorage` vs HttpOnly cookies (the latter is documented as a deliberate trade-off, not an oversight).
 - **What to refactor vs. what to leave as documented trade-off** — service layer, zod, react-router and HttpOnly cookies were *evaluated* and consciously deferred with reasoning in the Trade-offs table.
