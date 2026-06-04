@@ -138,10 +138,18 @@ npm run test:e2e
 
 The Docker Compose stack uses PostgreSQL instead of SQLite and serves the frontend via nginx.
 
+> **Before you start:** make sure **Docker Desktop is installed and running**
+> (its status must read "running") — this is the most common reason the command
+> below appears to hang or fail.
+
 ```bash
 # From project root
 docker compose up --build
 ```
+
+> The **first build takes a few minutes** (it pulls base images, runs `npm ci`,
+> and builds both the backend and the frontend). It's ready when the logs show
+> `Database seeded successfully!` followed by `Server running on http://localhost:4000`.
 
 This starts three services:
 
